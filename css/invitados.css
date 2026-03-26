@@ -476,23 +476,26 @@ select.modal__input {
 }
 
 .sel-toolbar .btn-action--outline {
-    border-color: rgba(255,255,255,0.2);
-    color: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.3);
+    color: #fff;
 }
 
 .sel-toolbar .btn-action--outline:hover {
+    background: #C9A96E;
     border-color: #C9A96E;
-    color: #C9A96E;
+    color: #fff;
 }
 
 .sel-toolbar .btn-action--danger {
-    background: transparent;
-    border-color: rgba(231,76,60,0.4);
+    background: rgba(231,76,60,0.2);
+    border-color: rgba(231,76,60,0.5);
     color: #ff6b6b;
 }
 
 .sel-toolbar .btn-action--danger:hover {
-    background: rgba(231,76,60,0.15);
+    background: rgba(231,76,60,0.4);
+    color: #fff;
 }
 
 /* ── Responsive ── */
