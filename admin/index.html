@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Boda S&J</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        :root {
+            --gold: #C9A96E;
+            --gold-dark: #A8884C;
+            --carbon: #2C2C2C;
+            --ivory: #FFFEF7;
+            --cream: #FAF8F5;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--cream);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login {
+            background: white;
+            border-radius: 16px;
+            padding: 48px 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+        }
+        .login__monogram {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+        .login__title {
+            font-size: 0.75rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 32px;
+        }
+        .login__group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .login__label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .login__input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e0dcd5;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .login__input:focus { border-color: var(--gold); }
+        .login__btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--gold);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.3s;
+        }
+        .login__btn:hover { background: var(--gold-dark); }
+        .login__error {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login">
+        <div class="login__monogram">S & J</div>
+        <div class="login__title">Panel de administración</div>
+        <form id="login-form">
+            <div class="login__group">
+                <label class="login__label" for="login-email">Email</label>
+                <input type="email" id="login-email" class="login__input" placeholder="tu@email.com" required>
+            </div>
+            <div class="login__group">
+                <label class="login__label" for="login-pass">Contraseña</label>
+                <input type="password" id="login-pass" class="login__input" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="login__btn">Entrar</button>
+            <p class="login__error" id="login-error">Email o contraseña incorrectos</p>
+        </form>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://lpatzgviideumccecfew.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MTY2MDMsImV4cCI6MjA5MDA5MjYwM30.jWQrW6FqArq87w50YALA9CUxahyPzwHBQLd9kI7U4qY';
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+
+            // Demo mode: simple password check
+            if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+                if (pass === 'boda2026') {
+                    localStorage.setItem('admin_auth', 'true');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                }
+                return;
+            }
+
+            // Supabase auth
+            try {
+                const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                    },
+                    body: JSON.stringify({ email, password: pass }),
+                });
+                const data = await res.json();
+                if (data.access_token) {
+                    localStorage.setItem('admin_token', data.access_token);
+                    localStorage.setItem('admin_auth', 'true');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                }
+            } catch (err) {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

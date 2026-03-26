@@ -1,0 +1,512 @@
+/* ══════════════════════════════════════════════
+   INVITADOS — Guest Management Styles
+   ══════════════════════════════════════════════ */
+
+/* Header */
+.inv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.inv-header__title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.inv-header__count {
+    font-size: 0.85rem;
+    color: #999;
+    margin-top: 4px;
+}
+
+.inv-header__actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Buttons (reuse from mesas) */
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-action--gold { background: #C9A96E; color: white; }
+.btn-action--gold:hover { background: #A8884C; }
+.btn-action--outline { background: white; color: #666; border: 1.5px solid #ddd; }
+.btn-action--outline:hover { border-color: #C9A96E; color: #C9A96E; }
+.btn-action--danger { background: white; color: #e74c3c; border: 1.5px solid #fdd; }
+.btn-action--danger:hover { background: #fef0f0; }
+
+/* ── Group Card ── */
+.inv-group {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    border-left: 5px solid #ddd;
+    transition: box-shadow 0.3s;
+}
+
+.inv-group:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.inv-group--ungrouped {
+    border-left-color: #ccc;
+    background: #faf9f7;
+}
+
+.inv-group__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.inv-group__title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.inv-group__count {
+    background: #f0ece6;
+    color: #999;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.inv-group__actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.inv-group__btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ccc;
+    padding: 4px;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.inv-group__btn:hover { color: #C9A96E; }
+.inv-group__btn--delete:hover { color: #e74c3c; }
+
+/* ── Guest Row inside group ── */
+.inv-group__list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inv-guest {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: #faf9f7;
+    border-radius: 10px;
+    transition: all 0.2s;
+    cursor: grab;
+    user-select: none;
+}
+
+.inv-group--ungrouped .inv-guest {
+    background: white;
+}
+
+.inv-guest:hover {
+    background: #f5f0ea;
+    transform: translateX(4px);
+}
+
+/* Drag handle */
+.inv-guest__drag {
+    color: #ccc;
+    flex-shrink: 0;
+    cursor: grab;
+    padding: 2px;
+    transition: color 0.2s;
+}
+
+.inv-guest:hover .inv-guest__drag {
+    color: #999;
+}
+
+/* Dragging state */
+.inv-guest--dragging {
+    opacity: 0.35;
+    transform: scale(0.97);
+    cursor: grabbing;
+}
+
+/* Drop zone ready (while something is being dragged) */
+.inv-group--drop-ready {
+    border-style: dashed;
+}
+
+.inv-group--drop-ready .inv-group__list {
+    min-height: 60px;
+}
+
+/* Actively hovering over drop zone */
+.inv-group--drag-over {
+    background: #faf6ef;
+    border-color: #C9A96E !important;
+    box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.15), 0 4px 20px rgba(0,0,0,0.08);
+    transform: scale(1.01);
+}
+
+.inv-group--drag-over.inv-group--ungrouped {
+    background: #f5f3ef;
+}
+
+.inv-guest__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C9A96E, #E8D5B0);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.inv-guest__avatar--confirmed {
+    background: linear-gradient(135deg, #2e7d32, #66bb6a);
+    box-shadow: 0 0 0 3px #e8f5e9;
+}
+
+.inv-guest__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.inv-guest__name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--carbon);
+}
+
+.inv-guest__meta {
+    font-size: 0.75rem;
+    color: #999;
+    margin-top: 2px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.inv-guest__badges {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.inv-guest__badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.inv-guest__badge--carne { background: #fce4ec; color: #c62828; }
+.inv-guest__badge--pescado { background: #e3f2fd; color: #1565c0; }
+.inv-guest__badge--vegetariano { background: #e8f5e9; color: #2e7d32; }
+.inv-guest__badge--vegano { background: #f1f8e9; color: #558b2f; }
+.inv-guest__badge--bus { background: #C9A96E18; color: #A8884C; }
+.inv-guest__badge--car { background: #f5f5f5; color: #999; }
+.inv-guest__badge--allergy { background: #fff3e0; color: #e65100; }
+
+.inv-guest__edit {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ccc;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.inv-guest__edit:hover {
+    color: #C9A96E;
+    background: #C9A96E11;
+}
+
+.inv-guest__delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ccc;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.inv-guest__delete:hover {
+    color: #e74c3c;
+    background: #e74c3c11;
+}
+
+/* ── Empty state ── */
+.inv-empty {
+    text-align: center;
+    padding: 32px;
+    color: #bbb;
+    font-size: 0.85rem;
+}
+
+/* ── Modal ── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 400px;
+    width: 100%;
+}
+
+.modal--wide {
+    max-width: 520px;
+}
+
+.modal__title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.modal__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.modal__field {
+    margin-bottom: 14px;
+}
+
+.modal__label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 6px;
+}
+
+.modal__input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #e0dcd5;
+    border-radius: 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.3s;
+    background: white;
+}
+
+.modal__input:focus { border-color: #C9A96E; }
+
+select.modal__input {
+    cursor: pointer;
+    appearance: auto;
+}
+
+.modal__btns {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+/* Color picker */
+.color-picker {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.color-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.color-dot:hover {
+    transform: scale(1.15);
+}
+
+.color-dot.active {
+    border-color: var(--carbon);
+    box-shadow: 0 0 0 2px white, 0 0 0 4px var(--carbon);
+}
+
+/* ── Checkbox ── */
+.inv-guest__check {
+    width: 18px;
+    height: 18px;
+    accent-color: #C9A96E;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.inv-guest--selected {
+    background: #C9A96E12 !important;
+    border-left: 3px solid #C9A96E;
+}
+
+/* ── Familia sub-block ── */
+.inv-familia {
+    background: #f7f5f1;
+    border: 1.5px dashed #e0dcd5;
+    border-radius: 10px;
+    padding: 8px 8px 8px 12px;
+    margin-bottom: 6px;
+}
+
+.inv-familia__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+    padding: 4px 4px 8px;
+}
+
+.inv-familia .inv-guest {
+    background: white;
+    margin-bottom: 4px;
+}
+
+.inv-familia .inv-guest:last-child {
+    margin-bottom: 0;
+}
+
+/* Familia tag in meta */
+.inv-guest__fam-tag {
+    background: #C9A96E18;
+    color: #A8884C;
+    padding: 1px 8px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+/* ── Selection Toolbar (floating) ── */
+.sel-toolbar {
+    position: fixed;
+    bottom: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2C2C2C;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    z-index: 500;
+    transition: bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.sel-toolbar.active {
+    bottom: 24px;
+}
+
+.sel-toolbar__text {
+    font-size: 0.85rem;
+    margin-right: 4px;
+}
+
+.btn-action--sm {
+    padding: 7px 14px;
+    font-size: 0.75rem;
+}
+
+.sel-toolbar .btn-action--outline {
+    border-color: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.8);
+}
+
+.sel-toolbar .btn-action--outline:hover {
+    border-color: #C9A96E;
+    color: #C9A96E;
+}
+
+.sel-toolbar .btn-action--danger {
+    background: transparent;
+    border-color: rgba(231,76,60,0.4);
+    color: #ff6b6b;
+}
+
+.sel-toolbar .btn-action--danger:hover {
+    background: rgba(231,76,60,0.15);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+    .modal__row {
+        grid-template-columns: 1fr;
+    }
+
+    .inv-guest__badges {
+        display: none;
+    }
+
+    .inv-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

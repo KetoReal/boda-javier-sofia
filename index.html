@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sofía & Javier — 29 de Agosto de 2026</title>
+    <meta name="description" content="Boda de Sofía y Javier. 29 de agosto de 2026. Confirma tu asistencia.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- PARALLAX FLOATING RINGS                     -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="parallax-rings" aria-hidden="true">
+        <!-- Ring 1 — left, large, interlocked pair -->
+        <div class="parallax-ring parallax-ring--1" data-speed="0.08" data-rotate="0.02">
+            <svg viewBox="0 0 140 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="50" rx="36" ry="36" stroke="#E8D5B0" stroke-width="4" opacity="0.7"/>
+                <ellipse cx="90" cy="50" rx="36" ry="36" stroke="#C9A96E" stroke-width="4" opacity="0.55"/>
+            </svg>
+        </div>
+        <!-- Ring 2 — right, single tilted ring -->
+        <div class="parallax-ring parallax-ring--2" data-speed="-0.05" data-rotate="-0.015">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="50" rx="40" ry="30" stroke="#C9A96E" stroke-width="3.5" opacity="0.5" transform="rotate(-15 50 50)"/>
+                <ellipse cx="50" cy="50" rx="34" ry="24" stroke="#E8D5B0" stroke-width="2" opacity="0.35" transform="rotate(-15 50 50)"/>
+            </svg>
+        </div>
+        <!-- Ring 3 — left, small interlocked -->
+        <div class="parallax-ring parallax-ring--3" data-speed="0.12" data-rotate="0.03">
+            <svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="40" cy="40" rx="28" ry="28" stroke="#C9A96E" stroke-width="3" opacity="0.5"/>
+                <ellipse cx="72" cy="40" rx="28" ry="28" stroke="#E8D5B0" stroke-width="3" opacity="0.6"/>
+            </svg>
+        </div>
+        <!-- Ring 4 — right, large single -->
+        <div class="parallax-ring parallax-ring--4" data-speed="-0.07" data-rotate="0.01">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="50" cy="50" rx="42" ry="42" stroke="#E8D5B0" stroke-width="4" opacity="0.45"/>
+                <ellipse cx="50" cy="50" rx="36" ry="36" stroke="#C9A96E" stroke-width="2" opacity="0.3"/>
+                <rect x="46" y="8" width="8" height="8" rx="1" transform="rotate(45 50 12)" fill="#C9A96E" opacity="0.5"/>
+            </svg>
+        </div>
+        <!-- Ring 5 — right, tiny accent -->
+        <div class="parallax-ring parallax-ring--5" data-speed="0.15" data-rotate="-0.04">
+            <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="22" stroke="#C9A96E" stroke-width="3" opacity="0.4"/>
+            </svg>
+        </div>
+        <!-- Ring 6 — left bottom, small pair -->
+        <div class="parallax-ring parallax-ring--6" data-speed="-0.1" data-rotate="0.025">
+            <svg viewBox="0 0 110 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="35" cy="35" rx="26" ry="26" stroke="#C9A96E" stroke-width="3" opacity="0.5"/>
+                <ellipse cx="68" cy="35" rx="26" ry="26" stroke="#E8D5B0" stroke-width="3" opacity="0.45"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- HERO SECTION                                -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section id="hero" class="hero">
+        <div class="hero__bg" style="background-image: url('img/hero.jpg')"></div>
+        <div class="hero__overlay"></div>
+        <div class="hero__content">
+            <p class="hero__pre">Estáis invitados a la boda de</p>
+            <h1 class="hero__names">
+                <span class="hero__name-script">Sofía</span>
+                <span class="hero__ampersand">&</span>
+                <span class="hero__name-script">Javier</span>
+            </h1>
+            <div class="hero__divider">
+                <span class="hero__line"></span>
+                <span class="hero__diamond">◇</span>
+                <span class="hero__line"></span>
+            </div>
+            <p class="hero__date">29 de Agosto de 2026</p>
+            <p class="hero__venue">Antigua Fábrica de Harinas · Madrid</p>
+        </div>
+        <a href="#bienvenida" class="hero__scroll" aria-label="Ir al contenido">
+            <span class="hero__scroll-text">Descubre más</span>
+            <span class="hero__scroll-arrow">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 5v14M5 12l7 7 7-7"/>
+                </svg>
+            </span>
+        </a>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- BIENVENIDA                                  -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section id="bienvenida" class="section bienvenida">
+        <div class="container">
+            <!-- Ornamental divider -->
+            <div class="ornament" data-animate>
+                <svg viewBox="0 0 200 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="0" y1="10" x2="80" y2="10" stroke="#C9A96E" stroke-width="0.5" opacity="0.5"/>
+                    <path d="M90 10 L95 5 L100 10 L95 15 Z" fill="#C9A96E" opacity="0.6"/>
+                    <line x1="120" y1="10" x2="200" y2="10" stroke="#C9A96E" stroke-width="0.5" opacity="0.5"/>
+                </svg>
+            </div>
+            <div class="section__badge" data-animate>Nuestra historia</div>
+            <h2 class="section__title" data-animate>
+                <span class="script-text">Nos casamos</span>
+            </h2>
+            <p class="bienvenida__intro" data-animate>
+                Después de años de aventuras juntos, de recorrer el mundo de la mano
+                y de construir un hogar lleno de amor (y de gatos), hemos decidido
+                dar el paso más bonito de nuestras vidas.
+            </p>
+
+            <div class="bienvenida__collage" data-animate>
+                <div class="bienvenida__frame bienvenida__frame--main">
+                    <img src="img/couple-temple.jpg" alt="Sofía y Javier en Tailandia" loading="lazy">
+                </div>
+                <div class="bienvenida__frame bienvenida__frame--accent">
+                    <img src="img/cats.jpg" alt="Nuestros gatitos" loading="lazy">
+                    <span class="bienvenida__caption">Los peques de la casa 🐱</span>
+                </div>
+            </div>
+
+            <div class="bienvenida__bottom" data-animate>
+                <p>
+                    Queremos celebrarlo rodeados de las personas que más queremos.
+                    Y tú eres una de ellas. Nos haría enormemente felices contar contigo.
+                </p>
+                <p class="bienvenida__cta-text">
+                    Pero antes de nada... ¡necesitamos saber si vienes!
+                </p>
+                <a href="#rsvp" class="btn btn--primary btn--glow">Confirmar asistencia</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- COUNTDOWN                                   -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section id="countdown" class="section countdown">
+        <div class="container">
+            <div class="ornament" data-animate>
+                <svg viewBox="0 0 200 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="0" y1="10" x2="80" y2="10" stroke="#C9A96E" stroke-width="0.5" opacity="0.5"/>
+                    <path d="M90 10 L95 5 L100 10 L95 15 Z" fill="#C9A96E" opacity="0.6"/>
+                    <line x1="120" y1="10" x2="200" y2="10" stroke="#C9A96E" stroke-width="0.5" opacity="0.5"/>
+                </svg>
+            </div>
+            <h2 class="section__title" data-animate>
+                <span class="script-text">Cuenta atrás</span>
+            </h2>
+            <div class="countdown__timer" data-animate>
+                <div class="countdown__item">
+                    <span class="countdown__number" id="cd-days">000</span>
+                    <span class="countdown__label">Días</span>
+                </div>
+                <div class="countdown__sep">:</div>
+                <div class="countdown__item">
+                    <span class="countdown__number" id="cd-hours">00</span>
+                    <span class="countdown__label">Horas</span>
+                </div>
+                <div class="countdown__sep">:</div>
+                <div class="countdown__item">
+                    <span class="countdown__number" id="cd-minutes">00</span>
+                    <span class="countdown__label">Minutos</span>
+                </div>
+                <div class="countdown__sep">:</div>
+                <div class="countdown__item">
+                    <span class="countdown__number" id="cd-seconds">00</span>
+                    <span class="countdown__label">Segundos</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- RSVP WIZARD                                 -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section id="rsvp" class="section rsvp">
+        <div class="container">
+            <h2 class="section__title" data-animate>
+                <span class="script-text">Confirma tu asistencia</span>
+            </h2>
+            <p class="section__subtitle" data-animate>Rellena el formulario para confirmar que vienes. ¡Solo te llevará un momento!</p>
+
+            <div class="rsvp__wizard" data-animate>
+                <!-- Progress Bar -->
+                <div class="rsvp__progress">
+                    <div class="rsvp__progress-bar">
+                        <div class="rsvp__progress-fill" id="rsvp-progress-fill"></div>
+                    </div>
+                    <div class="rsvp__steps">
+                        <div class="rsvp__step rsvp__step--active" data-step="1">
+                            <div class="rsvp__step-circle">1</div>
+                            <span class="rsvp__step-label">Datos</span>
+                        </div>
+                        <div class="rsvp__step" data-step="2">
+                            <div class="rsvp__step-circle">2</div>
+                            <span class="rsvp__step-label">Bus</span>
+                        </div>
+                        <div class="rsvp__step" data-step="3">
+                            <div class="rsvp__step-circle">3</div>
+                            <span class="rsvp__step-label">Menú</span>
+                        </div>
+                        <div class="rsvp__step" data-step="4">
+                            <div class="rsvp__step-circle">4</div>
+                            <span class="rsvp__step-label">Detalle</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 1: Personal Info -->
+                <div class="rsvp__panel rsvp__panel--active" id="rsvp-step-1">
+                    <h3 class="rsvp__panel-title">¿Cómo te llamas?</h3>
+                    <div class="rsvp__form-group">
+                        <label class="rsvp__label" for="guest-name">Nombre</label>
+                        <input type="text" id="guest-name" class="rsvp__input" placeholder="Tu nombre" required autocomplete="given-name">
+                    </div>
+                    <div class="rsvp__form-group">
+                        <label class="rsvp__label" for="guest-surname">Apellidos</label>
+                        <input type="text" id="guest-surname" class="rsvp__input" placeholder="Tus apellidos" required autocomplete="family-name">
+                    </div>
+                    <button class="btn btn--primary btn--full" id="rsvp-next-1">
+                        Siguiente
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+
+                <!-- Step 2: Transport -->
+                <div class="rsvp__panel" id="rsvp-step-2">
+                    <h3 class="rsvp__panel-title">¿Vas a utilizar el autobús?</h3>
+                    <p class="rsvp__panel-hint">Selecciona tu opción de transporte</p>
+                    <div class="rsvp__options rsvp__options--transport">
+                        <label class="rsvp__option-card">
+                            <input type="radio" name="transport" value="plaza-castilla" class="rsvp__option-input">
+                            <div class="rsvp__option-visual">
+                                <div class="rsvp__option-icon">
+                                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="8" y="12" width="48" height="36" rx="6"/>
+                                        <rect x="14" y="18" width="16" height="14" rx="2"/>
+                                        <rect x="34" y="18" width="16" height="14" rx="2"/>
+                                        <circle cx="20" cy="52" r="4"/><circle cx="44" cy="52" r="4"/>
+                                        <line x1="8" y1="36" x2="56" y2="36"/>
+                                    </svg>
+                                </div>
+                                <span class="rsvp__option-title">Sí, desde Plaza de Castilla</span>
+                                <span class="rsvp__option-detail">Salida 15:30h · Madrid</span>
+                            </div>
+                            <div class="rsvp__option-check">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </label>
+                        <label class="rsvp__option-card">
+                            <input type="radio" name="transport" value="alcobendas" class="rsvp__option-input">
+                            <div class="rsvp__option-visual">
+                                <div class="rsvp__option-icon">
+                                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="8" y="12" width="48" height="36" rx="6"/>
+                                        <rect x="14" y="18" width="16" height="14" rx="2"/>
+                                        <rect x="34" y="18" width="16" height="14" rx="2"/>
+                                        <circle cx="20" cy="52" r="4"/><circle cx="44" cy="52" r="4"/>
+                                        <line x1="8" y1="36" x2="56" y2="36"/>
+                                    </svg>
+                                </div>
+                                <span class="rsvp__option-title">Sí, desde Alcobendas</span>
+                                <span class="rsvp__option-detail">Salida 16:30h · Av. España</span>
+                            </div>
+                            <div class="rsvp__option-check">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </label>
+                        <label class="rsvp__option-card">
+                            <input type="radio" name="transport" value="no" class="rsvp__option-input">
+                            <div class="rsvp__option-visual">
+                                <div class="rsvp__option-icon">
+                                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M8 40 C8 28 16 20 32 20 C48 20 56 28 56 40"/>
+                                        <rect x="12" y="36" width="40" height="14" rx="4"/>
+                                        <circle cx="20" cy="54" r="4"/><circle cx="44" cy="54" r="4"/>
+                                        <rect x="22" y="40" width="8" height="6" rx="1"/>
+                                        <rect x="34" y="40" width="8" height="6" rx="1"/>
+                                    </svg>
+                                </div>
+                                <span class="rsvp__option-title">No, iré por mi cuenta</span>
+                                <span class="rsvp__option-detail">Vehículo propio</span>
+                            </div>
+                            <div class="rsvp__option-check">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="rsvp__nav">
+                        <button class="btn btn--ghost" id="rsvp-back-2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            Atrás
+                        </button>
+                        <button class="btn btn--primary" id="rsvp-next-2" disabled>
+                            Siguiente
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Menu -->
+                <div class="rsvp__panel" id="rsvp-step-3">
+                    <h3 class="rsvp__panel-title">¿Qué menú prefieres?</h3>
+                    <p class="rsvp__panel-hint">Elige tu opción favorita</p>
+                    <div class="rsvp__options rsvp__options--menu">
+                        <label class="rsvp__option-circle">
+                            <input type="radio" name="menu" value="carne" class="rsvp__option-input">
+                            <div class="rsvp__circle-visual">
+                                <div class="rsvp__circle-icon">
+                                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+                                        <ellipse cx="32" cy="38" rx="24" ry="8"/>
+                                        <path d="M20 22 C20 16 28 10 32 10 C36 10 44 16 44 22 L44 34 C44 34 38 30 32 30 C26 30 20 34 20 34 Z"/>
+                                        <path d="M28 18 C30 16 34 16 36 18"/>
+                                    </svg>
+                                </div>
+                                <span class="rsvp__circle-label">Carne</span>
+                            </div>
+                            <div class="rsvp__option-check">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </label>
+                        <label class="rsvp__option-circle">
+                            <input type="radio" name="menu" value="pescado" class="rsvp__option-input">
+                            <div class="rsvp__circle-visual">
+                                <div class="rsvp__circle-icon">
+                                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 32 C20 20 44 18 52 32 C44 46 20 44 12 32Z"/>
+                                        <circle cx="44" cy="30" r="2" fill="currentColor"/>
+                                        <path d="M6 24 L12 32 L6 40"/>
+                                        <path d="M24 28 C28 24 34 24 38 28"/>
+                                        <path d="M24 36 C28 40 34 40 38 36"/>
+                                    </svg>
+                                </div>
+                                <span class="rsvp__circle-label">Pescado</span>
+                            </div>
+                            <div class="rsvp__option-check">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </label>
+                        <label class="rsvp__option-circle">
+                            <input type="radio" name="menu" value="vegetariano" class="rsvp__option-input">
+                            <div class="rsvp__circle-visual">
+                                <div class="rsvp__circle-icon">
+                                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M32 52 L32 30"/>
+                                        <path d="M32 30 C24 24 20 14 28 8 C32 12 36 12 40 8 C48 14 44 24 32 30Z"/>
+                                        <path d="M26 44 C22 42 18 38 20 32"/>
+                                        <path d="M38 44 C42 42 46 38 44 32"/>
+                                    </svg>
+                                </div>
+                                <span class="rsvp__circle-label">Vegetariano</span>
+                            </div>
+                            <div class="rsvp__option-check">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </label>
+                        <label class="rsvp__option-circle">
+                            <input type="radio" name="menu" value="vegano" class="rsvp__option-input">
+                            <div class="rsvp__circle-visual">
+                                <div class="rsvp__circle-icon">
+                                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M16 48 C16 28 28 12 48 12 C48 32 36 48 16 48Z"/>
+                                        <path d="M16 48 C28 36 40 24 48 12"/>
+                                        <path d="M24 40 C28 32 34 28 38 22"/>
+                                    </svg>
+                                </div>
+                                <span class="rsvp__circle-label">Vegano</span>
+                            </div>
+                            <div class="rsvp__option-check">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="rsvp__form-group rsvp__form-group--allergy">
+                        <label class="rsvp__label" for="guest-allergy">¿Alguna alergia o intolerancia?</label>
+                        <textarea id="guest-allergy" class="rsvp__input rsvp__textarea" placeholder="Escribe aquí si tienes alguna alergia o intolerancia alimentaria..." rows="3"></textarea>
+                    </div>
+                    <div class="rsvp__nav">
+                        <button class="btn btn--ghost" id="rsvp-back-3">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            Atrás
+                        </button>
+                        <button class="btn btn--primary" id="rsvp-next-3" disabled>
+                            Siguiente
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Un detalle (IBAN) -->
+                <div class="rsvp__panel" id="rsvp-step-4">
+                    <div class="rsvp__regalo">
+                        <p class="rsvp__regalo-text">
+                            Vuestra compañía es el mejor regalo.
+                            Si queréis tener un detalle, aquí os dejamos la cuenta:
+                        </p>
+                        <div class="rsvp__iban-card" id="iban-card">
+                            <span class="rsvp__iban-label">IBAN</span>
+                            <span class="rsvp__iban-number" id="iban-number">ES13 0182 7066 2002 0065 3919</span>
+                            <button class="rsvp__iban-copy" id="iban-copy" title="Copiar IBAN">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                                <span id="copy-text">Copiar</span>
+                            </button>
+                        </div>
+                        <p class="rsvp__regalo-hint">Puedes copiarlo o enviártelo por WhatsApp</p>
+                    </div>
+                    <div class="rsvp__nav rsvp__nav--regalo">
+                        <button class="btn btn--whatsapp" id="rsvp-share">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                            Enviar por WhatsApp
+                        </button>
+                        <button class="btn btn--outline-gold" id="rsvp-next-4">
+                            Finalizar
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                    </div>
+                    <button class="rsvp__back-link" id="rsvp-back-4">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Volver al paso anterior
+                    </button>
+                </div>
+
+                <!-- Confirmation Panel -->
+                <div class="rsvp__panel rsvp__confirmation" id="rsvp-confirmation">
+                    <div class="rsvp__confetti-canvas" id="confetti-canvas"></div>
+                    <div class="rsvp__confirmation-content">
+                        <div class="rsvp__confirmation-icon">
+                            <svg viewBox="0 0 80 80" fill="none">
+                                <circle cx="40" cy="40" r="36" stroke="#C9A96E" stroke-width="2"/>
+                                <path d="M24 40l10 10 22-22" stroke="#C9A96E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <h3 class="rsvp__confirmation-title">
+                            ¡<span id="confirm-name">Invitado</span>, muchas gracias!
+                        </h3>
+                        <p class="rsvp__confirmation-text">
+                            Tu asistencia ha sido confirmada. Nos lo vamos a pasar genial.
+                        </p>
+                        <p class="rsvp__confirmation-hint">
+                            Revisa la información del evento más abajo para que no te pierdas nada.
+                        </p>
+                        <a href="#eventos" class="btn btn--primary">
+                            Ver información del evento
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- EVENTOS & TIMELINE                          -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section id="eventos" class="section eventos">
+        <div class="container">
+            <h2 class="section__title" data-animate>
+                <span class="script-text">El gran día</span>
+            </h2>
+            <p class="section__subtitle" data-animate>29 de Agosto de 2026</p>
+
+            <div class="timeline" data-animate>
+                <div class="timeline__item">
+                    <div class="timeline__time">15:30h</div>
+                    <div class="timeline__dot"></div>
+                    <div class="timeline__card">
+                        <div class="timeline__icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="6" y="10" width="36" height="26" rx="5"/>
+                                <rect x="10" y="14" width="12" height="10" rx="2"/>
+                                <rect x="26" y="14" width="12" height="10" rx="2"/>
+                                <circle cx="16" cy="40" r="3"/><circle cx="32" cy="40" r="3"/>
+                                <line x1="6" y1="28" x2="42" y2="28"/>
+                            </svg>
+                        </div>
+                        <h4 class="timeline__title">Autobús — Plaza de Castilla</h4>
+                        <p class="timeline__desc">Punto de encuentro en Plaza de Castilla, Madrid. El autobús saldrá puntual.</p>
+                    </div>
+                </div>
+
+                <div class="timeline__item">
+                    <div class="timeline__time">16:30h</div>
+                    <div class="timeline__dot"></div>
+                    <div class="timeline__card">
+                        <div class="timeline__icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="6" y="10" width="36" height="26" rx="5"/>
+                                <rect x="10" y="14" width="12" height="10" rx="2"/>
+                                <rect x="26" y="14" width="12" height="10" rx="2"/>
+                                <circle cx="16" cy="40" r="3"/><circle cx="32" cy="40" r="3"/>
+                                <line x1="6" y1="28" x2="42" y2="28"/>
+                            </svg>
+                        </div>
+                        <h4 class="timeline__title">Autobús — Alcobendas</h4>
+                        <p class="timeline__desc">Punto de encuentro en Av. de España, junto al Ayuntamiento de Alcobendas.</p>
+                    </div>
+                </div>
+
+                <div class="timeline__item">
+                    <div class="timeline__time">17:30h</div>
+                    <div class="timeline__dot"></div>
+                    <div class="timeline__card">
+                        <div class="timeline__icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M24 4 L24 12"/>
+                                <path d="M12 44 L12 20 L24 10 L36 20 L36 44"/>
+                                <path d="M8 44 L40 44"/>
+                                <rect x="18" y="28" width="12" height="16" rx="6"/>
+                                <path d="M20 20 L24 16 L28 20"/>
+                                <circle cx="24" cy="6" r="2"/>
+                            </svg>
+                        </div>
+                        <h4 class="timeline__title">Ceremonia</h4>
+                        <p class="timeline__desc">Iglesia de Nuestra Señora de la Varga, Uceda (Guadalajara)</p>
+                    </div>
+                </div>
+
+                <div class="timeline__item">
+                    <div class="timeline__time">18:30h</div>
+                    <div class="timeline__dot"></div>
+                    <div class="timeline__card">
+                        <div class="timeline__icon">
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M14 44 L14 24 L8 24 L24 8 L40 24 L34 24 L34 44 Z"/>
+                                <rect x="20" y="32" width="8" height="12"/>
+                                <rect x="18" y="18" width="4" height="4" rx="1"/>
+                                <rect x="26" y="18" width="4" height="4" rx="1"/>
+                                <path d="M6 44 L42 44"/>
+                            </svg>
+                        </div>
+                        <h4 class="timeline__title">Banquete y Fiesta</h4>
+                        <p class="timeline__desc">Antigua Fábrica de Harinas, Torremocha del Jarama (Madrid). ¡A disfrutar!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- CÓMO LLEGAR                                 -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section id="como-llegar" class="section como-llegar">
+        <div class="container">
+            <h2 class="section__title" data-animate>
+                <span class="script-text">Cómo llegar</span>
+            </h2>
+
+            <div class="locations" data-animate>
+                <div class="location-card">
+                    <div class="location-card__icon">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M24 4 L24 12"/>
+                            <path d="M12 44 L12 20 L24 10 L36 20 L36 44"/>
+                            <path d="M8 44 L40 44"/>
+                            <rect x="18" y="28" width="12" height="16" rx="6"/>
+                            <circle cx="24" cy="6" r="2"/>
+                        </svg>
+                    </div>
+                    <h4 class="location-card__title">Ceremonia</h4>
+                    <p class="location-card__name">Iglesia de Ntra. Sra. de la Varga</p>
+                    <p class="location-card__address">Uceda, Guadalajara</p>
+                    <a href="https://maps.google.com/?q=Iglesia+Nuestra+Señora+de+la+Varga+Uceda" target="_blank" rel="noopener" class="location-card__link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Ver en Google Maps
+                    </a>
+                </div>
+
+                <div class="location-card">
+                    <div class="location-card__icon">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 44 L14 24 L8 24 L24 8 L40 24 L34 24 L34 44 Z"/>
+                            <rect x="20" y="32" width="8" height="12"/>
+                            <rect x="18" y="18" width="4" height="4" rx="1"/>
+                            <rect x="26" y="18" width="4" height="4" rx="1"/>
+                            <path d="M6 44 L42 44"/>
+                        </svg>
+                    </div>
+                    <h4 class="location-card__title">Banquete y Fiesta</h4>
+                    <p class="location-card__name">Antigua Fábrica de Harinas</p>
+                    <p class="location-card__address">Ctra. M-128, Km 1,3<br>Torremocha del Jarama, 28189 Madrid</p>
+                    <a href="https://maps.google.com/?q=Antigua+Fabrica+de+Harinas+Torremocha+del+Jarama" target="_blank" rel="noopener" class="location-card__link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Ver en Google Maps
+                    </a>
+                </div>
+            </div>
+
+            <div class="map-embed" data-animate>
+                <iframe
+                    src="https://maps.google.com/maps?q=Antigua+Fabrica+de+Harinas+Torremocha+del+Jarama&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                    width="100%" height="400" style="border:0; border-radius: 16px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- FOOTER                                      -->
+    <!-- ═══════════════════════════════════════════ -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer__monogram">S <span class="footer__heart">&hearts;</span> J</p>
+            <p class="footer__date">29 · 08 · 2026</p>
+            <p class="footer__made">Hecho con amor</p>
+        </div>
+    </footer>
+
+    <!-- Canvas for confetti -->
+    <canvas id="confetti-global-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/rsvp.js"></script>
+</body>
+</html>

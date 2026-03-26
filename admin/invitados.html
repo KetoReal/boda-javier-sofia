@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitados — Boda S&J</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="../css/admin.css">
+    <link rel="stylesheet" href="../css/invitados.css">
+</head>
+<body>
+    <script>
+        if (!localStorage.getItem('admin_auth')) window.location.href = 'index.html';
+    </script>
+
+    <nav class="admin-nav">
+        <div class="admin-nav__brand">S & J <span>Admin</span></div>
+        <div class="admin-nav__links">
+            <a href="dashboard.html" class="admin-nav__link">Dashboard</a>
+            <a href="invitados.html" class="admin-nav__link admin-nav__link--active">Invitados</a>
+            <a href="simulacion.html" class="admin-nav__link">Simulación</a>
+            <a href="mesas.html" class="admin-nav__link">Mesas</a>
+            <a href="#" id="logout-btn" class="admin-nav__link admin-nav__link--logout">Salir</a>
+        </div>
+    </nav>
+
+    <main class="admin-main">
+        <!-- Header -->
+        <div class="inv-header">
+            <div>
+                <h2 class="inv-header__title">Gestión de Invitados</h2>
+                <p class="inv-header__count"><span id="total-count">0</span> invitados en total</p>
+            </div>
+            <div class="inv-header__actions">
+                <button class="btn-action btn-action--gold" id="btn-add-guest">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Nuevo invitado
+                </button>
+                <button class="btn-action btn-action--outline" id="btn-add-group">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                    Nuevo grupo
+                </button>
+            </div>
+        </div>
+
+        <!-- Groups container -->
+        <div id="groups-container"></div>
+
+        <!-- Ungrouped guests -->
+        <div class="inv-group inv-group--ungrouped" id="ungrouped-section">
+            <div class="inv-group__header">
+                <h3 class="inv-group__title">Sin grupo asignado</h3>
+                <span class="inv-group__count" id="ungrouped-count">0</span>
+            </div>
+            <div class="inv-group__list" id="ungrouped-list"></div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Guest Modal -->
+    <div class="modal-overlay" id="guest-modal">
+        <div class="modal modal--wide">
+            <h3 class="modal__title" id="modal-title">Nuevo invitado</h3>
+            <form id="guest-form">
+                <input type="hidden" id="guest-id">
+                <div class="modal__row">
+                    <div class="modal__field">
+                        <label class="modal__label">Nombre *</label>
+                        <input type="text" class="modal__input" id="f-nombre" required>
+                    </div>
+                    <div class="modal__field">
+                        <label class="modal__label">Apellidos *</label>
+                        <input type="text" class="modal__input" id="f-apellidos" required>
+                    </div>
+                </div>
+                <div class="modal__row">
+                    <div class="modal__field">
+                        <label class="modal__label">Autobús</label>
+                        <select class="modal__input" id="f-autobus">
+                            <option value="">Sin seleccionar</option>
+                            <option value="plaza-castilla">Plaza de Castilla</option>
+                            <option value="alcobendas">Alcobendas</option>
+                            <option value="no">Vehículo propio</option>
+                        </select>
+                    </div>
+                    <div class="modal__field">
+                        <label class="modal__label">Menú</label>
+                        <select class="modal__input" id="f-menu">
+                            <option value="">Sin seleccionar</option>
+                            <option value="carne">Carne</option>
+                            <option value="pescado">Pescado</option>
+                            <option value="vegetariano">Vegetariano</option>
+                            <option value="vegano">Vegano</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal__row">
+                    <div class="modal__field">
+                        <label class="modal__label">Grupo</label>
+                        <select class="modal__input" id="f-grupo"></select>
+                    </div>
+                    <div class="modal__field">
+                        <label class="modal__label">Familia</label>
+                        <input type="text" class="modal__input" id="f-familia" list="familias-list" placeholder="Ej: Familia Martinez">
+                        <datalist id="familias-list"></datalist>
+                    </div>
+                </div>
+                <div class="modal__field">
+                    <label class="modal__label">Alergias / Notas</label>
+                    <input type="text" class="modal__input" id="f-alergias" placeholder="Opcional">
+                </div>
+                <div class="modal__btns">
+                    <button type="button" class="btn-action btn-action--outline" id="modal-cancel">Cancelar</button>
+                    <button type="button" class="btn-action btn-action--danger" id="modal-delete" style="display:none">Eliminar</button>
+                    <button type="submit" class="btn-action btn-action--gold" id="modal-save">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Group Modal -->
+    <div class="modal-overlay" id="group-modal">
+        <div class="modal">
+            <h3 class="modal__title">Nuevo grupo</h3>
+            <div class="modal__field">
+                <label class="modal__label">Nombre del grupo</label>
+                <input type="text" class="modal__input" id="g-nombre" placeholder="Ej: Familia novia, Amigos universidad...">
+            </div>
+            <div class="modal__field">
+                <label class="modal__label">Color</label>
+                <div class="color-picker" id="color-picker">
+                    <button type="button" class="color-dot" data-color="#C9A96E" style="background:#C9A96E"></button>
+                    <button type="button" class="color-dot" data-color="#7D8C6C" style="background:#7D8C6C"></button>
+                    <button type="button" class="color-dot" data-color="#c62828" style="background:#c62828"></button>
+                    <button type="button" class="color-dot" data-color="#1565c0" style="background:#1565c0"></button>
+                    <button type="button" class="color-dot" data-color="#6a1b9a" style="background:#6a1b9a"></button>
+                    <button type="button" class="color-dot" data-color="#e65100" style="background:#e65100"></button>
+                    <button type="button" class="color-dot" data-color="#00838f" style="background:#00838f"></button>
+                    <button type="button" class="color-dot" data-color="#4e342e" style="background:#4e342e"></button>
+                </div>
+            </div>
+            <div class="modal__btns">
+                <button type="button" class="btn-action btn-action--outline" id="group-cancel">Cancelar</button>
+                <button type="button" class="btn-action btn-action--gold" id="group-save">Crear grupo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selection toolbar (floating bottom bar) -->
+    <div class="sel-toolbar" id="selection-toolbar">
+        <span class="sel-toolbar__text"><strong id="sel-count">0</strong> seleccionados</span>
+        <button class="btn-action btn-action--outline btn-action--sm" id="sel-move">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+            Mover a grupo
+        </button>
+        <button class="btn-action btn-action--danger btn-action--sm" id="sel-delete">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>
+            Eliminar
+        </button>
+        <button class="btn-action btn-action--outline btn-action--sm" id="sel-clear">Cancelar</button>
+    </div>
+
+    <!-- Bulk Move Modal -->
+    <div class="modal-overlay" id="bulk-move-modal">
+        <div class="modal">
+            <h3 class="modal__title">Mover seleccionados a grupo</h3>
+            <div class="modal__field">
+                <label class="modal__label">Grupo destino</label>
+                <select class="modal__input" id="bulk-grupo"></select>
+            </div>
+            <div class="modal__btns">
+                <button type="button" class="btn-action btn-action--outline" id="bulk-cancel">Cancelar</button>
+                <button type="button" class="btn-action btn-action--gold" id="bulk-confirm">Mover</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/invitados.js"></script>
+</body>
+</html>

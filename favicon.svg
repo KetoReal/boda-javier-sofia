@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#FFFFFF"/>
+  <circle cx="24" cy="32" r="14" fill="none" stroke="#C9A96E" stroke-width="3.5"/>
+  <circle cx="40" cy="32" r="14" fill="none" stroke="#E8D5B0" stroke-width="3.5"/>
+  <!-- Diamond accent -->
+  <rect x="29.5" y="14" width="5" height="5" rx="0.8" transform="rotate(45 32 16.5)" fill="#C9A96E" opacity="0.6"/>
+</svg>
