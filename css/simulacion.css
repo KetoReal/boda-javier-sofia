@@ -498,6 +498,98 @@
     cursor: grabbing;
 }
 
+/* ── Checkbox ── */
+.vguest__check {
+    width: 18px;
+    height: 18px;
+    accent-color: #C9A96E;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.vguest--selected {
+    background: #C9A96E12 !important;
+    border-left-color: #C9A96E !important;
+}
+
+/* ── Select all bar ── */
+.sel-all-bar {
+    margin-bottom: 16px;
+}
+
+.sel-all-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #666;
+    cursor: pointer;
+}
+
+.sel-all-label input {
+    width: 18px;
+    height: 18px;
+    accent-color: #C9A96E;
+    cursor: pointer;
+}
+
+/* ── Selection Toolbar (floating) ── */
+.sel-toolbar {
+    position: fixed;
+    bottom: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2C2C2C;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    z-index: 500;
+    transition: bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.sel-toolbar.active {
+    bottom: 24px;
+}
+
+.sel-toolbar__text {
+    font-size: 0.85rem;
+    margin-right: 4px;
+}
+
+.btn-action--sm {
+    padding: 7px 14px;
+    font-size: 0.75rem;
+}
+
+.sel-toolbar .btn-action--outline {
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.3);
+    color: #fff;
+}
+
+.sel-toolbar .btn-action--outline:hover {
+    background: #C9A96E;
+    border-color: #C9A96E;
+    color: #fff;
+}
+
+.sel-toolbar .btn-action--danger {
+    background: rgba(231,76,60,0.2);
+    border-color: rgba(231,76,60,0.5);
+    color: #ff6b6b;
+}
+
+.sel-toolbar .btn-action--danger:hover {
+    background: rgba(231,76,60,0.4);
+    color: #fff;
+}
+
 /* ── Color picker ── */
 .color-picker {
     display: flex;

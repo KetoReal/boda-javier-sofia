@@ -16,6 +16,34 @@
     let groups = JSON.parse(localStorage.getItem('wedding_virtual_groups') || '[]');
     let vGuestGroups = JSON.parse(localStorage.getItem('wedding_vguest_groups') || '{}');
     let vGuestFamilias = JSON.parse(localStorage.getItem('wedding_vguest_familias') || '{}');
+    let selected = new Set();
+
+    // ── Selection ──
+    function toggleSelect(id) {
+        const sid = String(id);
+        if (selected.has(sid)) selected.delete(sid);
+        else selected.add(sid);
+        updateSelectionUI();
+    }
+
+    function clearSelection() {
+        selected.clear();
+        updateSelectionUI();
+    }
+
+    function updateSelectionUI() {
+        document.querySelectorAll('.vguest').forEach(row => {
+            const cb = row.querySelector('.vguest__check');
+            const id = row.dataset.vguestId;
+            if (cb) cb.checked = selected.has(id);
+            row.classList.toggle('vguest--selected', selected.has(id));
+        });
+        const bar = document.getElementById('sel-toolbar');
+        if (bar) {
+            document.getElementById('sel-count').textContent = selected.size;
+            bar.classList.toggle('active', selected.size > 0);
+        }
+    }
 
     async function fetchRealGuests() {
         try {
@@ -230,6 +258,7 @@
         row.dataset.vguestId = vg.id;
 
         row.innerHTML = `
+            <input type="checkbox" class="vguest__check" ${selected.has(String(vg.id)) ? 'checked' : ''}>
             <div class="inv-guest__drag" title="Arrastra para mover">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
             </div>
@@ -285,8 +314,17 @@
             save(); saveVGuestGroups(); saveVGuestFamilias(); render();
         });
 
+        // Checkbox
+        row.querySelector('.vguest__check').addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleSelect(vg.id);
+        });
+
         // Click row → match modal
-        row.addEventListener('click', () => openMatchModal(vg));
+        row.addEventListener('click', (e) => {
+            if (e.target.type === 'checkbox') return;
+            openMatchModal(vg);
+        });
 
         // Drag — moves familia block
         row.addEventListener('dragstart', (e) => {
@@ -638,6 +676,52 @@
         document.getElementById('qa-nombre').value = '';
         document.getElementById('qa-apellidos').value = '';
         document.getElementById('qa-nombre').focus();
+    });
+
+    // ── Selection toolbar ──
+    document.getElementById('sel-all').addEventListener('change', (e) => {
+        if (e.target.checked) {
+            virtualGuests.forEach(v => selected.add(String(v.id)));
+        } else {
+            selected.clear();
+        }
+        updateSelectionUI();
+    });
+
+    document.getElementById('sel-clear').addEventListener('click', clearSelection);
+
+    document.getElementById('sel-delete').addEventListener('click', () => {
+        if (!confirm(`¿Eliminar ${selected.size} invitados?`)) return;
+        selected.forEach(id => {
+            virtualGuests = virtualGuests.filter(v => v.id !== id);
+            delete matches[id];
+            delete vGuestGroups[id];
+            delete vGuestFamilias[id];
+        });
+        selected.clear();
+        save(); saveVGuestGroups(); saveVGuestFamilias(); render();
+    });
+
+    document.getElementById('sel-move').addEventListener('click', () => {
+        document.getElementById('bulk-move-modal').classList.add('active');
+        const sel = document.getElementById('bulk-grupo');
+        sel.innerHTML = '<option value="">Sin grupo</option>';
+        groups.forEach(g => { sel.innerHTML += `<option value="${g.id}">${esc(g.name)}</option>`; });
+    });
+
+    document.getElementById('bulk-cancel').addEventListener('click', () => {
+        document.getElementById('bulk-move-modal').classList.remove('active');
+    });
+
+    document.getElementById('bulk-confirm').addEventListener('click', () => {
+        const groupId = document.getElementById('bulk-grupo').value;
+        selected.forEach(id => {
+            if (groupId) vGuestGroups[id] = groupId;
+            else delete vGuestGroups[id];
+        });
+        saveVGuestGroups();
+        document.getElementById('bulk-move-modal').classList.remove('active');
+        clearSelection(); render();
     });
 
     // ── Logout ──

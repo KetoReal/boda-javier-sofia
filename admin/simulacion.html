@@ -65,6 +65,13 @@
             </div>
         </div>
 
+        <!-- Select all -->
+        <div class="sel-all-bar" id="sel-all-bar">
+            <label class="sel-all-label">
+                <input type="checkbox" id="sel-all"> Seleccionar todos
+            </label>
+        </div>
+
         <!-- Groups container (drag-drop groups) -->
         <div id="groups-container"></div>
 
@@ -226,6 +233,29 @@
             <div class="modal__btns">
                 <button type="button" class="btn-action btn-action--outline" id="match-cancel">Cancelar</button>
                 <button type="button" class="btn-action btn-action--danger" id="match-unlink" style="display:none">Desvincular</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selection toolbar -->
+    <div class="sel-toolbar" id="sel-toolbar">
+        <span class="sel-toolbar__text"><strong id="sel-count">0</strong> seleccionados</span>
+        <button class="btn-action btn-action--outline btn-action--sm" id="sel-move">Mover a grupo</button>
+        <button class="btn-action btn-action--danger btn-action--sm" id="sel-delete">Eliminar</button>
+        <button class="btn-action btn-action--outline btn-action--sm" id="sel-clear">Cancelar</button>
+    </div>
+
+    <!-- Bulk Move Modal -->
+    <div class="modal-overlay" id="bulk-move-modal">
+        <div class="modal">
+            <h3 class="modal__title">Mover seleccionados a grupo</h3>
+            <div class="modal__field">
+                <label class="modal__label">Grupo destino</label>
+                <select class="modal__input" id="bulk-grupo"></select>
+            </div>
+            <div class="modal__btns">
+                <button type="button" class="btn-action btn-action--outline" id="bulk-cancel">Cancelar</button>
+                <button type="button" class="btn-action btn-action--gold" id="bulk-confirm">Mover</button>
             </div>
         </div>
     </div>
