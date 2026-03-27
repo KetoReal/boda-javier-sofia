@@ -78,8 +78,11 @@
         <!-- Ungrouped guests -->
         <div class="inv-group inv-group--ungrouped" id="ungrouped-section">
             <div class="inv-group__header">
-                <h3 class="inv-group__title">Sin grupo asignado</h3>
-                <span class="inv-group__count" id="ungrouped-count">0</span>
+                <div style="display:flex;align-items:center;gap:12px">
+                    <input type="checkbox" class="inv-group__check-all" id="ungrouped-check-all" title="Seleccionar todos sin grupo">
+                    <h3 class="inv-group__title">Sin grupo asignado</h3>
+                    <span class="inv-group__count" id="ungrouped-count">0</span>
+                </div>
             </div>
             <div class="inv-group__list" id="ungrouped-list"></div>
         </div>
@@ -174,10 +177,17 @@
                         <select class="modal__input" id="ef-grupo"></select>
                     </div>
                     <div class="modal__field">
-                        <label class="modal__label">Familia</label>
+                        <label class="modal__label">Familia <small style="color:#bbb;font-weight:400">(escribe o elige)</small></label>
                         <input type="text" class="modal__input" id="ef-familia" list="vfamilias-list" placeholder="Ej: Familia Martinez">
                         <datalist id="vfamilias-list"></datalist>
+                        <div class="familia-chips" id="familia-chips"></div>
                     </div>
+                </div>
+                <div class="modal__field">
+                    <label class="modal__label">
+                        <input type="checkbox" id="ef-confirmed" style="accent-color:#2e7d32;margin-right:6px">
+                        Confirmado (vinculado con registro real)
+                    </label>
                 </div>
                 <div class="modal__field">
                     <label class="modal__label">Alergias / Notas</label>

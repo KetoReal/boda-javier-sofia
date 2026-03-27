@@ -160,6 +160,7 @@
             section.innerHTML = `
                 <div class="inv-group__header">
                     <div style="display:flex;align-items:center;gap:12px">
+                        <input type="checkbox" class="inv-group__check-all" title="Seleccionar todo el grupo">
                         <h3 class="inv-group__title">${esc(group.name)}</h3>
                         <span class="inv-group__count">${groupVGuests.length}</span>
                     </div>
@@ -171,6 +172,15 @@
                 </div>
                 <div class="inv-group__list"></div>
             `;
+
+            // Select all in group
+            section.querySelector('.inv-group__check-all').addEventListener('change', (e) => {
+                groupVGuests.forEach(v => {
+                    if (e.target.checked) selected.add(String(v.id));
+                    else selected.delete(String(v.id));
+                });
+                updateSelectionUI();
+            });
 
             const list = section.querySelector('.inv-group__list');
             renderVGuestsInList(list, groupVGuests);
@@ -206,6 +216,19 @@
 
         ungroupedSection.style.display = '';
         setupDropZone(ungroupedSection, null);
+
+        // Select all ungrouped
+        const ungroupedCheckAll = document.getElementById('ungrouped-check-all');
+        if (ungroupedCheckAll) {
+            ungroupedCheckAll.checked = false;
+            ungroupedCheckAll.addEventListener('change', (e) => {
+                ungrouped.forEach(v => {
+                    if (e.target.checked) selected.add(String(v.id));
+                    else selected.delete(String(v.id));
+                });
+                updateSelectionUI();
+            });
+        }
     }
 
     // ── Render virtual guests grouped by familia within a list ──
@@ -479,9 +502,26 @@
 
     function populateFamiliaDatalist() {
         const dl = document.getElementById('vfamilias-list');
+        const chips = document.getElementById('familia-chips');
         if (!dl) return;
         const unique = [...new Set(Object.values(vGuestFamilias).filter(Boolean))];
         dl.innerHTML = unique.map(f => `<option value="${esc(f)}">`).join('');
+
+        // Render clickable chips for quick assignment
+        if (chips) {
+            chips.innerHTML = unique.map(f =>
+                `<button type="button" class="familia-chip" data-fam="${esc(f)}">${esc(f)}</button>`
+            ).join('');
+            chips.querySelectorAll('.familia-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const input = document.getElementById('ef-familia');
+                    input.value = btn.dataset.fam;
+                    // Highlight active
+                    chips.querySelectorAll('.familia-chip').forEach(b => b.classList.remove('familia-chip--active'));
+                    btn.classList.add('familia-chip--active');
+                });
+            });
+        }
     }
 
     function openEditModal(vg) {
@@ -493,9 +533,17 @@
         document.getElementById('ef-autobus').value = vg.autobus || '';
         document.getElementById('ef-alergias').value = vg.alergias || '';
         document.getElementById('ef-familia').value = vGuestFamilias[vg.id] || '';
+        document.getElementById('ef-confirmed').checked = !!matches[vg.id];
         document.getElementById('edit-delete').style.display = 'inline-flex';
         populateGroupSelect(document.getElementById('ef-grupo'), vGuestGroups[vg.id] || '');
         populateFamiliaDatalist();
+
+        // Highlight current familia chip
+        const currentFam = vGuestFamilias[vg.id] || '';
+        document.querySelectorAll('.familia-chip').forEach(btn => {
+            btn.classList.toggle('familia-chip--active', btn.dataset.fam === currentFam);
+        });
+
         document.getElementById('edit-modal').classList.add('active');
         document.getElementById('ef-nombre').focus();
     }
