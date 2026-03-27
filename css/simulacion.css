@@ -344,6 +344,21 @@
     font-weight: 600;
 }
 
+/* Dragging state for vguest rows */
+.vguest--dragging {
+    opacity: 0.35;
+    transform: scale(0.97);
+    cursor: grabbing;
+}
+
+.vguest {
+    cursor: grab;
+}
+
+.vguest:active {
+    cursor: grabbing;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .sim-stats { grid-template-columns: 1fr; }

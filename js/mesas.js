@@ -2,6 +2,7 @@
    MESAS — Drag & Drop table assignment
    Uses VIRTUAL guests for planning.
    Shows green/gray based on match status.
+   Shows group/familia info in tooltips.
    ══════════════════════════════════════════════ */
 
 (function () {
@@ -10,15 +11,21 @@
     const SEATS_PER_TABLE = 8;
 
     let guests = [];      // virtual guests
-    let matches = {};     // virtualId → realGuestId
+    let matches = {};     // virtualId -> realGuestId
     let tables = [];
     let assignments = {}; // { guestId: tableId }
+    let vGroups = [];
+    let vGuestGroups = {};
+    let vGuestFamilias = {};
 
     function loadData() {
         guests = JSON.parse(localStorage.getItem('wedding_virtual_guests') || '[]');
         matches = JSON.parse(localStorage.getItem('wedding_matches') || '{}');
         tables = JSON.parse(localStorage.getItem('wedding_tables') || '[]');
         assignments = JSON.parse(localStorage.getItem('wedding_assignments') || '{}');
+        vGroups = JSON.parse(localStorage.getItem('wedding_virtual_groups') || '[]');
+        vGuestGroups = JSON.parse(localStorage.getItem('wedding_vguest_groups') || '{}');
+        vGuestFamilias = JSON.parse(localStorage.getItem('wedding_vguest_familias') || '{}');
 
         if (!tables.length && guests.length > 0) {
             const numTables = Math.ceil(guests.length / SEATS_PER_TABLE);
@@ -42,6 +49,17 @@
         return !!matches[g.id];
     }
 
+    function getGroupName(guestId) {
+        const gid = vGuestGroups[guestId];
+        if (!gid) return '';
+        const group = vGroups.find(g => g.id === gid);
+        return group ? group.name : '';
+    }
+
+    function getFamilia(guestId) {
+        return vGuestFamilias[guestId] || '';
+    }
+
     // ── Chip ──
     function createChip(guest, isSeated) {
         const confirmed = isConfirmed(guest);
@@ -51,15 +69,24 @@
         chip.dataset.guestId = guest.id;
         chip.textContent = getInitials(guest);
 
+        // Build tooltip with group/familia info
+        const groupName = getGroupName(guest.id);
+        const familia = getFamilia(guest.id);
+        let tooltipText = `${guest.nombre} ${guest.apellidos}`;
+        if (groupName) tooltipText += ` | ${groupName}`;
+        if (familia) tooltipText += ` | ${familia}`;
+        if (confirmed) tooltipText += ' \u2713';
+        if (guest.menu) tooltipText += ` | ${guest.menu}`;
+
         const tooltip = document.createElement('span');
         tooltip.className = 'guest-chip__tooltip';
-        tooltip.textContent = `${guest.nombre} ${guest.apellidos}${confirmed ? ' ✓' : ''}`;
+        tooltip.textContent = tooltipText;
         chip.appendChild(tooltip);
 
         if (isSeated) {
             const removeBtn = document.createElement('button');
             removeBtn.className = 'guest-chip__remove';
-            removeBtn.textContent = '×';
+            removeBtn.textContent = '\u00d7';
             removeBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 delete assignments[guest.id];
@@ -134,7 +161,7 @@
             const seats = slot.querySelector('.table-slot__seats');
 
             if (seatedGuests.length === 0) {
-                seats.innerHTML = '<span class="table-slot__empty">Arrastra invitados aquí</span>';
+                seats.innerHTML = '<span class="table-slot__empty">Arrastra invitados aqui</span>';
             } else {
                 seatedGuests.forEach(g => seats.appendChild(createChip(g, true)));
             }
@@ -201,10 +228,10 @@
         saveTables(); render();
     });
 
-    // ── Generate fake guests → creates virtual guests ──
+    // ── Generate fake guests -> creates virtual guests ──
     const NOMBRES_M = ['Alejandro','Carlos','Daniel','David','Eduardo','Fernando','Gonzalo','Hugo','Javier','Luis','Manuel','Miguel','Pablo','Pedro','Rafael','Sergio','Antonio','Roberto','Alberto','Marcos'];
-    const NOMBRES_F = ['Ana','Beatriz','Carmen','Claudia','Elena','Isabel','Laura','Lucía','María','Marta','Natalia','Paula','Raquel','Sara','Sofía','Teresa','Verónica','Alba','Cristina','Patricia'];
-    const APELLIDOS = ['García','López','Martínez','Sánchez','Fernández','González','Rodríguez','Pérez','Ruiz','Díaz','Hernández','Moreno','Muñoz','Álvarez','Jiménez','Romero','Navarro','Torres','Domínguez','Gil'];
+    const NOMBRES_F = ['Ana','Beatriz','Carmen','Claudia','Elena','Isabel','Laura','Lucia','Maria','Marta','Natalia','Paula','Raquel','Sara','Sofia','Teresa','Veronica','Alba','Cristina','Patricia'];
+    const APELLIDOS = ['Garcia','Lopez','Martinez','Sanchez','Fernandez','Gonzalez','Rodriguez','Perez','Ruiz','Diaz','Hernandez','Moreno','Munoz','Alvarez','Jimenez','Romero','Navarro','Torres','Dominguez','Gil'];
 
     document.getElementById('btn-generate').addEventListener('click', () => {
         document.getElementById('generate-modal').classList.add('active');
@@ -225,6 +252,9 @@
                 id: 'v_' + Date.now() + '_' + i,
                 nombre: nombres[Math.floor(Math.random() * nombres.length)],
                 apellidos: APELLIDOS[Math.floor(Math.random() * APELLIDOS.length)] + ' ' + APELLIDOS[Math.floor(Math.random() * APELLIDOS.length)],
+                menu: null,
+                autobus: null,
+                alergias: null,
             });
         }
 
@@ -241,6 +271,7 @@
 
         document.getElementById('generate-modal').classList.remove('active');
         loadData();
+        if (window.updateBudgetBar) window.updateBudgetBar();
     });
 
     // ── Logout ──

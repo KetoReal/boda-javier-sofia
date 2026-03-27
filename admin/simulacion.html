@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulación — Boda S&J</title>
+    <title>Simulacion — Boda S&J</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
         <div class="admin-nav__links">
             <a href="dashboard.html" class="admin-nav__link">Dashboard</a>
             <a href="invitados.html" class="admin-nav__link">Invitados</a>
-            <a href="simulacion.html" class="admin-nav__link admin-nav__link--active">Simulación</a>
+            <a href="simulacion.html" class="admin-nav__link admin-nav__link--active">Simulacion</a>
             <a href="mesas.html" class="admin-nav__link">Mesas</a>
             <a href="#" id="logout-btn" class="admin-nav__link admin-nav__link--logout">Salir</a>
         </div>
@@ -52,7 +52,11 @@
                 </button>
                 <button class="btn-action btn-action--outline" id="btn-quick-add">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Añadir rápido
+                    Anadir rapido
+                </button>
+                <button class="btn-action btn-action--outline" id="btn-add-group">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                    Nuevo grupo
                 </button>
                 <button class="btn-action btn-action--gold" id="btn-auto-match">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -61,13 +65,22 @@
             </div>
         </div>
 
-        <!-- Virtual guests list -->
-        <div id="vguests-list"></div>
+        <!-- Groups container (drag-drop groups) -->
+        <div id="groups-container"></div>
+
+        <!-- Ungrouped guests -->
+        <div class="inv-group inv-group--ungrouped" id="ungrouped-section">
+            <div class="inv-group__header">
+                <h3 class="inv-group__title">Sin grupo asignado</h3>
+                <span class="inv-group__count" id="ungrouped-count">0</span>
+            </div>
+            <div class="inv-group__list" id="ungrouped-list"></div>
+        </div>
 
         <!-- Empty state -->
         <div class="sim-empty" id="sim-empty">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-            <p>Aún no hay invitados virtuales. Importa un Excel o añádelos manualmente.</p>
+            <p>Aun no hay invitados virtuales. Importa un Excel o anadelos manualmente.</p>
         </div>
     </main>
 
@@ -75,9 +88,9 @@
     <div class="modal-overlay" id="import-modal">
         <div class="modal modal--wide">
             <h3 class="modal__title">Importar invitados</h3>
-            <p class="modal__hint">Pega los datos desde Excel (nombre y apellido por línea, separados por tabulador o coma) o sube un archivo CSV.</p>
+            <p class="modal__hint">Pega los datos desde Excel (nombre y apellido por linea, separados por tabulador o coma) o sube un archivo CSV.</p>
             <div class="modal__field">
-                <textarea class="modal__input modal__textarea" id="import-text" rows="8" placeholder="Juan García&#10;María López&#10;Carlos Fernández"></textarea>
+                <textarea class="modal__input modal__textarea" id="import-text" rows="8" placeholder="Juan Garcia&#10;Maria Lopez&#10;Carlos Fernandez"></textarea>
             </div>
             <div class="modal__field">
                 <label class="modal__label">O sube un archivo CSV</label>
@@ -93,7 +106,7 @@
     <!-- Quick Add Modal -->
     <div class="modal-overlay" id="quickadd-modal">
         <div class="modal">
-            <h3 class="modal__title">Añadir invitado virtual</h3>
+            <h3 class="modal__title">Anadir invitado virtual</h3>
             <div class="modal__row">
                 <div class="modal__field">
                     <label class="modal__label">Nombre</label>
@@ -106,7 +119,96 @@
             </div>
             <div class="modal__btns">
                 <button type="button" class="btn-action btn-action--outline" id="qa-cancel">Cancelar</button>
-                <button type="button" class="btn-action btn-action--gold" id="qa-save">Añadir</button>
+                <button type="button" class="btn-action btn-action--gold" id="qa-save">Anadir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Virtual Guest Modal -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal modal--wide">
+            <h3 class="modal__title" id="edit-modal-title">Editar invitado virtual</h3>
+            <form id="edit-form">
+                <input type="hidden" id="edit-id">
+                <div class="modal__row">
+                    <div class="modal__field">
+                        <label class="modal__label">Nombre *</label>
+                        <input type="text" class="modal__input" id="ef-nombre" required>
+                    </div>
+                    <div class="modal__field">
+                        <label class="modal__label">Apellidos</label>
+                        <input type="text" class="modal__input" id="ef-apellidos">
+                    </div>
+                </div>
+                <div class="modal__row">
+                    <div class="modal__field">
+                        <label class="modal__label">Menu</label>
+                        <select class="modal__input" id="ef-menu">
+                            <option value="">Sin seleccionar</option>
+                            <option value="carne">Carne</option>
+                            <option value="pescado">Pescado</option>
+                            <option value="vegetariano">Vegetariano</option>
+                            <option value="vegano">Vegano</option>
+                        </select>
+                    </div>
+                    <div class="modal__field">
+                        <label class="modal__label">Autobus</label>
+                        <select class="modal__input" id="ef-autobus">
+                            <option value="">Sin seleccionar</option>
+                            <option value="plaza-castilla">Plaza de Castilla</option>
+                            <option value="alcobendas">Alcobendas</option>
+                            <option value="no">Vehiculo propio</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal__row">
+                    <div class="modal__field">
+                        <label class="modal__label">Grupo</label>
+                        <select class="modal__input" id="ef-grupo"></select>
+                    </div>
+                    <div class="modal__field">
+                        <label class="modal__label">Familia</label>
+                        <input type="text" class="modal__input" id="ef-familia" list="vfamilias-list" placeholder="Ej: Familia Martinez">
+                        <datalist id="vfamilias-list"></datalist>
+                    </div>
+                </div>
+                <div class="modal__field">
+                    <label class="modal__label">Alergias / Notas</label>
+                    <input type="text" class="modal__input" id="ef-alergias" placeholder="Opcional">
+                </div>
+                <div class="modal__btns">
+                    <button type="button" class="btn-action btn-action--outline" id="edit-cancel">Cancelar</button>
+                    <button type="button" class="btn-action btn-action--danger" id="edit-delete" style="display:none">Eliminar</button>
+                    <button type="submit" class="btn-action btn-action--gold" id="edit-save">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Group Modal -->
+    <div class="modal-overlay" id="group-modal">
+        <div class="modal">
+            <h3 class="modal__title">Nuevo grupo</h3>
+            <div class="modal__field">
+                <label class="modal__label">Nombre del grupo</label>
+                <input type="text" class="modal__input" id="g-nombre" placeholder="Ej: Familia novia, Amigos universidad...">
+            </div>
+            <div class="modal__field">
+                <label class="modal__label">Color</label>
+                <div class="color-picker" id="color-picker">
+                    <button type="button" class="color-dot" data-color="#C9A96E" style="background:#C9A96E"></button>
+                    <button type="button" class="color-dot" data-color="#7D8C6C" style="background:#7D8C6C"></button>
+                    <button type="button" class="color-dot" data-color="#c62828" style="background:#c62828"></button>
+                    <button type="button" class="color-dot" data-color="#1565c0" style="background:#1565c0"></button>
+                    <button type="button" class="color-dot" data-color="#6a1b9a" style="background:#6a1b9a"></button>
+                    <button type="button" class="color-dot" data-color="#e65100" style="background:#e65100"></button>
+                    <button type="button" class="color-dot" data-color="#00838f" style="background:#00838f"></button>
+                    <button type="button" class="color-dot" data-color="#4e342e" style="background:#4e342e"></button>
+                </div>
+            </div>
+            <div class="modal__btns">
+                <button type="button" class="btn-action btn-action--outline" id="group-cancel">Cancelar</button>
+                <button type="button" class="btn-action btn-action--gold" id="group-save">Crear grupo</button>
             </div>
         </div>
     </div>
@@ -128,6 +230,7 @@
         </div>
     </div>
 
+    <script src="../js/budget-bar.js"></script>
     <script src="../js/simulacion.js"></script>
 </body>
 </html>

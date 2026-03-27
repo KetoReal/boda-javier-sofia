@@ -1,6 +1,7 @@
 /* ══════════════════════════════════════════════
-   INVITADOS — Guest Management with Groups,
-   Familias (sub-groups), Multi-select & DnD
+   INVITADOS — Read-only list of RSVP registered guests
+   Edit/Delete for admin corrections.
+   Manual match to link real → virtual.
    ══════════════════════════════════════════════ */
 
 (function () {
@@ -8,22 +9,10 @@
 
     const SUPABASE_URL = 'https://lpatzgviideumccecfew.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MTY2MDMsImV4cCI6MjA5MDA5MjYwM30.jWQrW6FqArq87w50YALA9CUxahyPzwHBQLd9kI7U4qY';
-
-    let guests = [];
-    let groups = JSON.parse(localStorage.getItem('wedding_groups') || '[]');
-    let guestGroups = JSON.parse(localStorage.getItem('wedding_guest_groups') || '{}');
-    let guestFamilias = JSON.parse(localStorage.getItem('wedding_guest_familias') || '{}');
-    let selected = new Set();
-
-    // Match awareness: check if a real guest is matched with a virtual
-    function isConfirmed(guestId) {
-        const matches = JSON.parse(localStorage.getItem('wedding_matches') || '{}');
-        return Object.values(matches).includes(String(guestId));
-    }
-
     const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUxNjYwMywiZXhwIjoyMDkwMDkyNjAzfQ.-CM_Wku1-fWqtbz8flSb3MFabrxFnoED047cT81hgAs';
 
-    // ── Supabase helpers ──
+    let guests = [];
+
     function authHeaders() {
         return {
             'apikey': SUPABASE_ANON_KEY,
@@ -46,7 +35,6 @@
         const method = isEdit ? 'PATCH' : 'POST';
         const url = isEdit ? `${SUPABASE_URL}/rest/v1/guests?id=eq.${guest.id}` : `${SUPABASE_URL}/rest/v1/guests`;
         const body = { ...guest };
-        // Never send id in body — Supabase uses it in the URL for PATCH
         delete body.id;
         const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
         return res.json();
@@ -56,317 +44,154 @@
         await fetch(`${SUPABASE_URL}/rest/v1/guests?id=eq.${id}`, { method: 'DELETE', headers: authHeaders() });
     }
 
-    function saveGroups() { localStorage.setItem('wedding_groups', JSON.stringify(groups)); }
-    function saveGuestGroups() { localStorage.setItem('wedding_guest_groups', JSON.stringify(guestGroups)); }
-    function saveGuestFamilias() { localStorage.setItem('wedding_guest_familias', JSON.stringify(guestFamilias)); }
-
-    // ── Get all familia members ──
-    function getFamiliaMembers(guestId) {
-        const fam = guestFamilias[guestId];
-        if (!fam) return [String(guestId)];
-        return guests.filter(g => guestFamilias[g.id] === fam).map(g => String(g.id));
+    // ── Match helpers ──
+    function getMatches() {
+        return JSON.parse(localStorage.getItem('wedding_matches') || '{}');
+    }
+    function saveMatches(m) {
+        localStorage.setItem('wedding_matches', JSON.stringify(m));
+        if (window.updateBudgetBar) window.updateBudgetBar();
+    }
+    function getVirtuals() {
+        return JSON.parse(localStorage.getItem('wedding_virtual_guests') || '[]');
+    }
+    function saveVirtuals(v) {
+        localStorage.setItem('wedding_virtual_guests', JSON.stringify(v));
     }
 
-    // ── Get IDs to move (selected or familia block) ──
-    function getIdsToMove(triggerId) {
-        if (selected.size > 0 && selected.has(String(triggerId))) {
-            return [...selected];
+    function isMatched(guestId) {
+        const matches = getMatches();
+        return Object.values(matches).includes(String(guestId));
+    }
+
+    function getMatchedVirtualId(realGuestId) {
+        const matches = getMatches();
+        for (const [vid, rid] of Object.entries(matches)) {
+            if (String(rid) === String(realGuestId)) return vid;
         }
-        return getFamiliaMembers(triggerId);
+        return null;
     }
 
-    // ── Selection toolbar ──
-    function updateToolbar() {
-        const bar = document.getElementById('selection-toolbar');
-        const count = document.getElementById('sel-count');
-        if (selected.size > 0) {
-            bar.classList.add('active');
-            count.textContent = selected.size;
-        } else {
-            bar.classList.remove('active');
-        }
+    function normalize(s) {
+        return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
     }
 
-    function toggleSelect(guestId) {
-        const id = String(guestId);
-        if (selected.has(id)) selected.delete(id);
-        else selected.add(id);
-        // Update checkbox visuals
-        document.querySelectorAll('.inv-guest').forEach(row => {
-            const cb = row.querySelector('.inv-guest__check');
-            if (cb) cb.checked = selected.has(row.dataset.guestId);
-            row.classList.toggle('inv-guest--selected', selected.has(row.dataset.guestId));
-        });
-        updateToolbar();
+    function similarity(a, b) {
+        const na = normalize(a), nb = normalize(b);
+        if (na === nb) return 1;
+        if (na.includes(nb) || nb.includes(na)) return 0.8;
+        const wa = na.split(' '), wb = nb.split(' ');
+        const common = wa.filter(w => wb.includes(w)).length;
+        const total = Math.max(wa.length, wb.length);
+        return total > 0 ? common / total : 0;
     }
 
-    function clearSelection() {
-        selected.clear();
-        document.querySelectorAll('.inv-guest--selected').forEach(r => r.classList.remove('inv-guest--selected'));
-        document.querySelectorAll('.inv-guest__check').forEach(cb => cb.checked = false);
-        updateToolbar();
+    // ── Sync properties from real to virtual on match ──
+    function syncToVirtual(virtualId, realGuest) {
+        const virtuals = getVirtuals();
+        const vg = virtuals.find(v => v.id === virtualId);
+        if (!vg) return;
+        if (realGuest.menu) vg.menu = realGuest.menu;
+        if (realGuest.autobus) vg.autobus = realGuest.autobus;
+        if (realGuest.alergias) vg.alergias = realGuest.alergias;
+        saveVirtuals(virtuals);
     }
 
     // ── Render ──
     function render() {
         document.getElementById('total-count').textContent = guests.length;
-        const container = document.getElementById('groups-container');
-        container.innerHTML = '';
+        const list = document.getElementById('guests-list');
+        const empty = document.getElementById('inv-empty');
+        const hint = document.getElementById('inv-hint');
 
-        groups.forEach(group => {
-            const groupGuests = guests.filter(g => guestGroups[g.id] === group.id);
-            const section = document.createElement('div');
-            section.className = 'inv-group';
-            section.style.borderLeftColor = group.color || '#C9A96E';
-
-            section.innerHTML = `
-                <div class="inv-group__header">
-                    <div style="display:flex;align-items:center;gap:12px">
-                        <h3 class="inv-group__title">${esc(group.name)}</h3>
-                        <span class="inv-group__count">${groupGuests.length}</span>
-                    </div>
-                    <div class="inv-group__actions">
-                        <button class="inv-group__btn inv-group__btn--delete" title="Eliminar grupo">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="inv-group__list"></div>
-            `;
-
-            const list = section.querySelector('.inv-group__list');
-            renderGuestsInList(list, groupGuests);
-
-            if (groupGuests.length === 0) {
-                list.innerHTML = '<div class="inv-empty">Arrastra invitados aquí</div>';
-            }
-
-            section.querySelector('.inv-group__btn--delete').addEventListener('click', () => {
-                if (!confirm(`¿Eliminar el grupo "${group.name}"?`)) return;
-                Object.keys(guestGroups).forEach(gid => {
-                    if (guestGroups[gid] === group.id) delete guestGroups[gid];
-                });
-                groups = groups.filter(gr => gr.id !== group.id);
-                saveGroups(); saveGuestGroups(); render();
-            });
-
-            setupDropZone(section, group.id);
-            container.appendChild(section);
-        });
-
-        // Ungrouped
-        const ungrouped = guests.filter(g => !guestGroups[g.id]);
-        document.getElementById('ungrouped-count').textContent = ungrouped.length;
-        const ungroupedList = document.getElementById('ungrouped-list');
-        ungroupedList.innerHTML = '';
-
-        if (ungrouped.length === 0 && groups.length > 0 && guests.length > 0) {
-            ungroupedList.innerHTML = '<div class="inv-empty">Todos los invitados están asignados a un grupo</div>';
-        } else if (guests.length === 0) {
-            ungroupedList.innerHTML = '<div class="inv-empty">Aún no hay invitados registrados</div>';
-        } else {
-            renderGuestsInList(ungroupedList, ungrouped);
+        if (!guests.length) {
+            list.innerHTML = '';
+            empty.style.display = '';
+            hint.style.display = 'none';
+            return;
         }
 
-        const ungroupedSection = document.getElementById('ungrouped-section');
-        setupDropZone(ungroupedSection, null);
-        ungroupedSection.style.display = (groups.length === 0 && ungrouped.length === 0) ? 'none' : '';
+        empty.style.display = 'none';
+        hint.style.display = '';
+        list.innerHTML = '';
 
-        updateToolbar();
-    }
-
-    // ── Render guests grouped by familia within a list ──
-    function renderGuestsInList(listEl, guestList) {
-        // Sort: group by familia, then ungrouped
-        const familias = {};
-        const noFamilia = [];
-
-        guestList.forEach(g => {
-            const fam = guestFamilias[g.id];
-            if (fam) {
-                if (!familias[fam]) familias[fam] = [];
-                familias[fam].push(g);
-            } else {
-                noFamilia.push(g);
-            }
+        // Sort: matched first
+        const sorted = [...guests].sort((a, b) => {
+            const am = isMatched(a.id) ? 0 : 1;
+            const bm = isMatched(b.id) ? 0 : 1;
+            return am - bm || a.nombre.localeCompare(b.nombre);
         });
 
-        // Render familia blocks
-        Object.entries(familias).forEach(([famName, members]) => {
-            const block = document.createElement('div');
-            block.className = 'inv-familia';
-            block.innerHTML = `<div class="inv-familia__label">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                ${esc(famName)}
-            </div>`;
-            members.forEach(g => block.appendChild(createGuestRow(g)));
-            listEl.appendChild(block);
-        });
+        sorted.forEach(guest => {
+            const matched = isMatched(guest.id);
+            const initials = ((guest.nombre || '')[0] || '') + ((guest.apellidos || '')[0] || '');
+            const menuLabel = guest.menu ? guest.menu.charAt(0).toUpperCase() + guest.menu.slice(1) : '';
+            const busLabel = guest.autobus === 'no' ? 'Propio' : guest.autobus === 'plaza-castilla' ? 'P. Castilla' : guest.autobus === 'alcobendas' ? 'Alcobendas' : '';
 
-        // Render loose guests
-        noFamilia.forEach(g => listEl.appendChild(createGuestRow(g)));
-    }
+            let badges = '';
+            if (guest.menu) badges += `<span class="inv-guest__badge inv-guest__badge--${guest.menu}">${menuLabel}</span>`;
+            if (guest.autobus && guest.autobus !== 'no') badges += `<span class="inv-guest__badge inv-guest__badge--bus">${busLabel}</span>`;
+            else if (guest.autobus === 'no') badges += `<span class="inv-guest__badge inv-guest__badge--car">Propio</span>`;
+            if (guest.alergias) badges += `<span class="inv-guest__badge inv-guest__badge--allergy">${esc(guest.alergias)}</span>`;
 
-    function createGuestRow(guest) {
-        const row = document.createElement('div');
-        row.className = 'inv-guest' + (selected.has(String(guest.id)) ? ' inv-guest--selected' : '');
-        row.dataset.guestId = String(guest.id);
-        row.draggable = true;
-
-        const initials = ((guest.nombre || '')[0] || '') + ((guest.apellidos || '')[0] || '');
-        const menuLabel = guest.menu ? guest.menu.charAt(0).toUpperCase() + guest.menu.slice(1) : '';
-        const busLabel = guest.autobus === 'no' ? 'Propio' : guest.autobus === 'plaza-castilla' ? 'P. Castilla' : guest.autobus === 'alcobendas' ? 'Alcobendas' : '';
-        const famName = guestFamilias[guest.id] || '';
-
-        let badges = '';
-        if (guest.menu) badges += `<span class="inv-guest__badge inv-guest__badge--${guest.menu}">${menuLabel}</span>`;
-        if (guest.autobus && guest.autobus !== 'no') badges += `<span class="inv-guest__badge inv-guest__badge--bus">${busLabel}</span>`;
-        else if (guest.autobus === 'no') badges += `<span class="inv-guest__badge inv-guest__badge--car">Propio</span>`;
-        if (guest.alergias) badges += `<span class="inv-guest__badge inv-guest__badge--allergy">${esc(guest.alergias)}</span>`;
-
-        const confirmed = isConfirmed(guest.id);
-
-        row.innerHTML = `
-            <input type="checkbox" class="inv-guest__check" ${selected.has(String(guest.id)) ? 'checked' : ''}>
-            <div class="inv-guest__drag" title="Arrastra para mover">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>
-            </div>
-            <div class="inv-guest__avatar ${confirmed ? 'inv-guest__avatar--confirmed' : ''}">${initials.toUpperCase()}</div>
-            <div class="inv-guest__info">
-                <div class="inv-guest__name">${esc(guest.nombre)} ${esc(guest.apellidos)}</div>
-                <div class="inv-guest__meta">
-                    ${famName ? `<span class="inv-guest__fam-tag">${esc(famName)}</span>` : ''}
-                    ${guest.created_at ? `<span>${new Date(guest.created_at).toLocaleDateString('es-ES')}</span>` : ''}
+            const row = document.createElement('div');
+            row.className = 'inv-guest';
+            row.innerHTML = `
+                <div class="inv-guest__avatar ${matched ? 'inv-guest__avatar--confirmed' : ''}">${initials.toUpperCase()}</div>
+                <div class="inv-guest__info">
+                    <div class="inv-guest__name">${esc(guest.nombre)} ${esc(guest.apellidos)}</div>
+                    <div class="inv-guest__meta">
+                        ${guest.created_at ? `<span>${new Date(guest.created_at).toLocaleDateString('es-ES')}</span>` : ''}
+                    </div>
                 </div>
-            </div>
-            <div class="inv-guest__badges">${badges}</div>
-            <button class="inv-guest__edit" title="Editar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-            <button class="inv-guest__delete" title="Eliminar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-            </button>
-        `;
+                <div class="inv-guest__badges">${badges}</div>
+                <span class="inv-guest__match-status ${matched ? 'inv-guest__match-status--green' : 'inv-guest__match-status--gray'}">
+                    ${matched
+                        ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg> Vinculado'
+                        : 'Sin vincular'}
+                </span>
+                <button class="inv-guest__btn-link" title="Vincular con virtual">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                </button>
+                <button class="inv-guest__edit" title="Editar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="inv-guest__delete" title="Eliminar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                </button>
+            `;
 
-        // Checkbox
-        row.querySelector('.inv-guest__check').addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleSelect(guest.id);
-        });
-
-        // Delete
-        row.querySelector('.inv-guest__delete').addEventListener('click', async (e) => {
-            e.stopPropagation();
-            if (!confirm(`¿Eliminar a ${guest.nombre} ${guest.apellidos}?`)) return;
-            await deleteGuest(guest.id);
-            delete guestGroups[guest.id];
-            delete guestFamilias[guest.id];
-            selected.delete(String(guest.id));
-            saveGuestGroups(); saveGuestFamilias();
-            await fetchGuests(); render();
-        });
-
-        // Edit
-        row.querySelector('.inv-guest__edit').addEventListener('click', (e) => {
-            e.stopPropagation();
-            openEditModal(guest);
-        });
-
-        // Drag — moves selected or whole familia
-        row.addEventListener('dragstart', (e) => {
-            const ids = getIdsToMove(guest.id);
-            e.dataTransfer.setData('application/json', JSON.stringify(ids));
-            e.dataTransfer.effectAllowed = 'move';
-            row.classList.add('inv-guest--dragging');
-            // Mark all dragged rows
-            ids.forEach(id => {
-                const el = document.querySelector(`.inv-guest[data-guest-id="${id}"]`);
-                if (el) el.classList.add('inv-guest--dragging');
+            // Link button → link modal
+            row.querySelector('.inv-guest__btn-link').addEventListener('click', (e) => {
+                e.stopPropagation();
+                openLinkModal(guest);
             });
-            setTimeout(() => {
-                document.querySelectorAll('.inv-group').forEach(g => g.classList.add('inv-group--drop-ready'));
-            }, 0);
-        });
 
-        row.addEventListener('dragend', () => {
-            document.querySelectorAll('.inv-guest--dragging').forEach(r => r.classList.remove('inv-guest--dragging'));
-            document.querySelectorAll('.inv-group').forEach(g => g.classList.remove('inv-group--drop-ready', 'inv-group--drag-over'));
-        });
-
-        return row;
-    }
-
-    // ── Drop zones ──
-    function setupDropZone(element, groupId) {
-        element.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            element.classList.add('inv-group--drag-over');
-        });
-        element.addEventListener('dragleave', (e) => {
-            if (!element.contains(e.relatedTarget)) element.classList.remove('inv-group--drag-over');
-        });
-        element.addEventListener('drop', (e) => {
-            e.preventDefault();
-            element.classList.remove('inv-group--drag-over');
-            let ids = [];
-            try { ids = JSON.parse(e.dataTransfer.getData('application/json')); } catch (_) {}
-            if (!ids.length) return;
-
-            ids.forEach(id => {
-                if (groupId) guestGroups[id] = groupId;
-                else delete guestGroups[id];
+            // Edit
+            row.querySelector('.inv-guest__edit').addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditModal(guest);
             });
-            saveGuestGroups();
-            clearSelection();
-            render();
+
+            // Delete
+            row.querySelector('.inv-guest__delete').addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!confirm(`Eliminar a ${guest.nombre} ${guest.apellidos}?`)) return;
+                // Also remove any match pointing to this real guest
+                const matches = getMatches();
+                for (const [vid, rid] of Object.entries(matches)) {
+                    if (String(rid) === String(guest.id)) delete matches[vid];
+                }
+                saveMatches(matches);
+                await deleteGuest(guest.id);
+                await fetchGuests(); render();
+            });
+
+            list.appendChild(row);
         });
     }
 
-    function getGroupName(guestId) {
-        const gid = guestGroups[guestId];
-        if (!gid) return '';
-        const group = groups.find(g => g.id === gid);
-        return group ? group.name : '';
-    }
-
-    // ── Populate selects ──
-    function populateGroupSelect(selectedGroupId) {
-        const sel = document.getElementById('f-grupo');
-        sel.innerHTML = '<option value="">Sin grupo</option>';
-        groups.forEach(g => {
-            const opt = document.createElement('option');
-            opt.value = g.id;
-            opt.textContent = g.name;
-            if (g.id === selectedGroupId) opt.selected = true;
-            sel.appendChild(opt);
-        });
-    }
-
-    function populateFamiliaDatalist() {
-        const dl = document.getElementById('familias-list');
-        if (!dl) return;
-        const unique = [...new Set(Object.values(guestFamilias).filter(Boolean))];
-        dl.innerHTML = unique.map(f => `<option value="${esc(f)}">`).join('');
-    }
-
-    // ── Guest Modal ──
-    function openAddModal() {
-        document.getElementById('modal-title').textContent = 'Nuevo invitado';
-        document.getElementById('guest-id').value = '';
-        document.getElementById('f-nombre').value = '';
-        document.getElementById('f-apellidos').value = '';
-        document.getElementById('f-autobus').value = '';
-        document.getElementById('f-menu').value = '';
-        document.getElementById('f-alergias').value = '';
-        document.getElementById('f-familia').value = '';
-        document.getElementById('modal-delete').style.display = 'none';
-        populateGroupSelect('');
-        populateFamiliaDatalist();
-        document.getElementById('guest-modal').classList.add('active');
-        document.getElementById('f-nombre').focus();
-    }
-
+    // ── Edit Modal ──
     function openEditModal(guest) {
         document.getElementById('modal-title').textContent = 'Editar invitado';
         document.getElementById('guest-id').value = guest.id;
@@ -375,10 +200,7 @@
         document.getElementById('f-autobus').value = guest.autobus || '';
         document.getElementById('f-menu').value = guest.menu || '';
         document.getElementById('f-alergias').value = guest.alergias || '';
-        document.getElementById('f-familia').value = guestFamilias[guest.id] || '';
         document.getElementById('modal-delete').style.display = 'inline-flex';
-        populateGroupSelect(guestGroups[guest.id] || '');
-        populateFamiliaDatalist();
         document.getElementById('guest-modal').classList.add('active');
         document.getElementById('f-nombre').focus();
     }
@@ -387,7 +209,6 @@
         document.getElementById('guest-modal').classList.remove('active');
     }
 
-    // Save guest
     document.getElementById('guest-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('guest-id').value;
@@ -398,16 +219,7 @@
             menu: document.getElementById('f-menu').value || null,
             alergias: document.getElementById('f-alergias').value.trim() || null,
         };
-        if (!data.nombre || !data.apellidos) {
-            ['f-nombre', 'f-apellidos'].forEach(id => {
-                const el = document.getElementById(id);
-                if (!el.value.trim()) {
-                    el.style.borderColor = '#e74c3c';
-                    el.addEventListener('input', function fix() { el.style.borderColor = ''; el.removeEventListener('input', fix); });
-                }
-            });
-            return;
-        }
+        if (!data.nombre || !data.apellidos) return;
 
         const saveBtn = document.getElementById('modal-save');
         saveBtn.textContent = 'Guardando...';
@@ -416,21 +228,12 @@
         if (id) data.id = parseInt(id);
 
         try {
-            const result = await upsertGuest(data);
-            const savedGuest = Array.isArray(result) ? result[0] : result;
-            const guestId = savedGuest ? savedGuest.id : parseInt(id);
-
-            // Group
-            const groupId = document.getElementById('f-grupo').value;
-            if (groupId) guestGroups[guestId] = groupId;
-            else delete guestGroups[guestId];
-
-            // Familia
-            const fam = document.getElementById('f-familia').value.trim();
-            if (fam) guestFamilias[guestId] = fam;
-            else delete guestFamilias[guestId];
-
-            saveGuestGroups(); saveGuestFamilias();
+            await upsertGuest(data);
+            // If this real guest is matched to a virtual, sync properties
+            const vid = getMatchedVirtualId(id);
+            if (vid) {
+                syncToVirtual(vid, data);
+            }
             await fetchGuests(); render();
         } catch (err) { console.error('Save error:', err); }
 
@@ -439,88 +242,104 @@
         closeGuestModal();
     });
 
-    // Delete from modal
     document.getElementById('modal-delete').addEventListener('click', async () => {
         const id = document.getElementById('guest-id').value;
-        if (!id || !confirm('¿Eliminar este invitado?')) return;
+        if (!id || !confirm('Eliminar este invitado?')) return;
+        const matches = getMatches();
+        for (const [vid, rid] of Object.entries(matches)) {
+            if (String(rid) === String(id)) delete matches[vid];
+        }
+        saveMatches(matches);
         await deleteGuest(parseInt(id));
-        delete guestGroups[id]; delete guestFamilias[id];
-        saveGuestGroups(); saveGuestFamilias();
         await fetchGuests(); render(); closeGuestModal();
     });
 
     document.getElementById('modal-cancel').addEventListener('click', closeGuestModal);
-    document.getElementById('btn-add-guest').addEventListener('click', openAddModal);
 
-    // ── Selection toolbar actions ──
-    document.getElementById('sel-clear').addEventListener('click', clearSelection);
+    // ── Link Modal (link real → virtual) ──
+    let currentRealGuest = null;
 
-    document.getElementById('sel-delete').addEventListener('click', async () => {
-        if (!confirm(`¿Eliminar ${selected.size} invitados?`)) return;
-        for (const id of selected) {
-            await deleteGuest(parseInt(id));
-            delete guestGroups[id]; delete guestFamilias[id];
+    function openLinkModal(realGuest) {
+        currentRealGuest = realGuest;
+        document.getElementById('link-for').querySelector('strong').textContent = `${realGuest.nombre} ${realGuest.apellidos}`;
+        document.getElementById('link-search').value = '';
+        const vid = getMatchedVirtualId(realGuest.id);
+        document.getElementById('link-unlink').style.display = vid ? 'inline-flex' : 'none';
+        renderLinkResults('');
+        document.getElementById('link-modal').classList.add('active');
+        document.getElementById('link-search').focus();
+    }
+
+    function renderLinkResults(query) {
+        const container = document.getElementById('link-results');
+        const virtuals = getVirtuals();
+        const matches = getMatches();
+        const q = normalize(query);
+
+        let candidates = virtuals.map(vg => {
+            const fullName = `${vg.nombre} ${vg.apellidos}`;
+            const score = q ? similarity(fullName, query) : similarity(fullName, `${currentRealGuest.nombre} ${currentRealGuest.apellidos}`);
+            const alreadyMatched = !!matches[vg.id] && String(matches[vg.id]) !== String(currentRealGuest.id);
+            const isCurrentMatch = String(matches[vg.id]) === String(currentRealGuest.id);
+            return { ...vg, score, alreadyMatched, isCurrentMatch };
+        });
+
+        if (q) {
+            candidates = candidates.filter(c => normalize(`${c.nombre} ${c.apellidos}`).includes(q) || c.score > 0.3);
         }
-        selected.clear();
-        saveGuestGroups(); saveGuestFamilias();
-        await fetchGuests(); render();
-    });
 
-    document.getElementById('sel-move').addEventListener('click', () => {
-        document.getElementById('bulk-move-modal').classList.add('active');
-        const sel = document.getElementById('bulk-grupo');
-        sel.innerHTML = '<option value="">Sin grupo</option>';
-        groups.forEach(g => {
-            sel.innerHTML += `<option value="${g.id}">${esc(g.name)}</option>`;
+        candidates.sort((a, b) => b.score - a.score);
+
+        container.innerHTML = candidates.slice(0, 20).map(vg => {
+            const initials = ((vg.nombre || '')[0] || '') + ((vg.apellidos || '')[0] || '');
+            return `
+                <div class="match-result" data-virtual-id="${vg.id}" ${vg.alreadyMatched ? 'style="opacity:0.4"' : ''}>
+                    <div class="match-result__avatar">${initials.toUpperCase()}</div>
+                    <div class="match-result__info">
+                        <div class="match-result__name">${esc(vg.nombre)} ${esc(vg.apellidos)}</div>
+                        <div class="match-result__detail">${vg.menu || '\u2014'} · ${vg.autobus || '\u2014'}${vg.alreadyMatched ? ' · Ya vinculado' : ''}</div>
+                    </div>
+                    <span class="match-result__pick">${vg.isCurrentMatch ? '\u2713 Vinculado' : 'Elegir'}</span>
+                </div>
+            `;
+        }).join('') || '<p style="text-align:center;color:#999;padding:20px">No hay virtuales que coincidan</p>';
+
+        container.querySelectorAll('.match-result').forEach(el => {
+            el.addEventListener('click', () => {
+                const virtualId = el.dataset.virtualId;
+                const matches = getMatches();
+                // Remove any previous match for this real guest
+                for (const [vid, rid] of Object.entries(matches)) {
+                    if (String(rid) === String(currentRealGuest.id)) delete matches[vid];
+                }
+                matches[virtualId] = String(currentRealGuest.id);
+                saveMatches(matches);
+                // Sync properties to virtual
+                syncToVirtual(virtualId, currentRealGuest);
+                render();
+                document.getElementById('link-modal').classList.remove('active');
+            });
         });
+    }
+
+    document.getElementById('link-search').addEventListener('input', (e) => {
+        renderLinkResults(e.target.value);
     });
 
-    document.getElementById('bulk-cancel').addEventListener('click', () => {
-        document.getElementById('bulk-move-modal').classList.remove('active');
+    document.getElementById('link-cancel').addEventListener('click', () => {
+        document.getElementById('link-modal').classList.remove('active');
     });
 
-    document.getElementById('bulk-confirm').addEventListener('click', () => {
-        const groupId = document.getElementById('bulk-grupo').value;
-        selected.forEach(id => {
-            if (groupId) guestGroups[id] = groupId;
-            else delete guestGroups[id];
-        });
-        saveGuestGroups();
-        document.getElementById('bulk-move-modal').classList.remove('active');
-        clearSelection(); render();
-    });
-
-    // ── Group Modal ──
-    let selectedColor = '#C9A96E';
-
-    document.getElementById('btn-add-group').addEventListener('click', () => {
-        document.getElementById('g-nombre').value = '';
-        selectedColor = '#C9A96E';
-        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
-        document.querySelector('.color-dot[data-color="#C9A96E"]').classList.add('active');
-        document.getElementById('group-modal').classList.add('active');
-        document.getElementById('g-nombre').focus();
-    });
-
-    document.getElementById('group-cancel').addEventListener('click', () => {
-        document.getElementById('group-modal').classList.remove('active');
-    });
-
-    document.querySelectorAll('.color-dot').forEach(dot => {
-        dot.addEventListener('click', () => {
-            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
-            dot.classList.add('active');
-            selectedColor = dot.dataset.color;
-        });
-    });
-
-    document.getElementById('group-save').addEventListener('click', () => {
-        const name = document.getElementById('g-nombre').value.trim();
-        if (!name) return;
-        groups.push({ id: 'g_' + Date.now(), name, color: selectedColor });
-        saveGroups();
-        document.getElementById('group-modal').classList.remove('active');
-        render();
+    document.getElementById('link-unlink').addEventListener('click', () => {
+        if (currentRealGuest) {
+            const matches = getMatches();
+            for (const [vid, rid] of Object.entries(matches)) {
+                if (String(rid) === String(currentRealGuest.id)) delete matches[vid];
+            }
+            saveMatches(matches);
+            render();
+        }
+        document.getElementById('link-modal').classList.remove('active');
     });
 
     // ── Logout ──

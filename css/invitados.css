@@ -498,6 +498,121 @@ select.modal__input {
     color: #fff;
 }
 
+/* ── Match status tag ── */
+.inv-guest__match-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.inv-guest__match-status--green {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.inv-guest__match-status--gray {
+    background: #f5f5f5;
+    color: #999;
+}
+
+/* ── Link button ── */
+.inv-guest__btn-link {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ccc;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.inv-guest__btn-link:hover {
+    color: #C9A96E;
+    background: #C9A96E11;
+}
+
+/* ── Hint text ── */
+.inv-hint {
+    font-size: 0.85rem;
+    color: #999;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: #faf9f7;
+    border-radius: 8px;
+    border-left: 3px solid #C9A96E;
+}
+
+.inv-hint a {
+    color: #C9A96E;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.inv-hint a:hover {
+    text-decoration: underline;
+}
+
+/* ── Match results (for link modal) ── */
+.match-results {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 12px;
+}
+
+.match-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.match-result:hover {
+    background: #f0faf0;
+}
+
+.match-result__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C9A96E, #E8D5B0);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.match-result__info {
+    flex: 1;
+}
+
+.match-result__name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.match-result__detail {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.match-result__pick {
+    color: #2e7d32;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
     .modal__row {
