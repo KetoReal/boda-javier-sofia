@@ -344,6 +344,145 @@
     font-weight: 600;
 }
 
+/* ── Guest badges (menu, bus, allergy) ── */
+.inv-guest__badges {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.inv-guest__badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.inv-guest__badge--carne { background: #fce4ec; color: #c62828; }
+.inv-guest__badge--pescado { background: #e3f2fd; color: #1565c0; }
+.inv-guest__badge--vegetariano { background: #e8f5e9; color: #2e7d32; }
+.inv-guest__badge--vegano { background: #f1f8e9; color: #558b2f; }
+.inv-guest__badge--bus { background: #C9A96E18; color: #A8884C; }
+.inv-guest__badge--car { background: #f5f5f5; color: #999; }
+.inv-guest__badge--allergy { background: #fff3e0; color: #e65100; }
+
+/* ── Drag handle ── */
+.inv-guest__drag {
+    color: #ccc;
+    flex-shrink: 0;
+    cursor: grab;
+    padding: 2px;
+}
+
+.vguest:hover .inv-guest__drag { color: #999; }
+
+/* ── Familia sub-block ── */
+.inv-familia {
+    background: #f7f5f1;
+    border: 1.5px dashed #e0dcd5;
+    border-radius: 10px;
+    padding: 8px 8px 8px 12px;
+    margin-bottom: 6px;
+}
+
+.inv-familia__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #999;
+    padding: 4px 4px 8px;
+}
+
+.inv-familia .vguest {
+    background: white;
+    margin-bottom: 4px;
+}
+
+.inv-guest__fam-tag {
+    background: #C9A96E18;
+    color: #A8884C;
+    padding: 1px 8px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+/* ── Group card (shared with invitados) ── */
+.inv-group {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    border-left: 5px solid #ddd;
+}
+
+.inv-group--ungrouped {
+    border-left-color: #ccc;
+    background: #faf9f7;
+}
+
+.inv-group__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.inv-group__title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.inv-group__count {
+    background: #f0ece6;
+    color: #999;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.inv-group__btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ccc;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.inv-group__btn:hover { color: #e74c3c; }
+
+.inv-group__list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inv-empty {
+    text-align: center;
+    padding: 20px;
+    color: #bbb;
+    font-size: 0.85rem;
+}
+
+/* Drop zone states */
+.inv-group--drop-ready { border-style: dashed; }
+.inv-group--drop-ready .inv-group__list { min-height: 60px; }
+.inv-group--drag-over {
+    background: #faf6ef;
+    border-color: #C9A96E !important;
+    box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.15);
+}
+
 /* Dragging state for vguest rows */
 .vguest--dragging {
     opacity: 0.35;
@@ -357,6 +496,31 @@
 
 .vguest:active {
     cursor: grabbing;
+}
+
+/* ── Color picker ── */
+.color-picker {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.color-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.color-dot:hover {
+    transform: scale(1.15);
+}
+
+.color-dot.active {
+    border-color: #2C2C2C;
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #2C2C2C;
 }
 
 /* Responsive */
