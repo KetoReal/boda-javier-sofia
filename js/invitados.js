@@ -101,6 +101,17 @@
     // ── Render ──
     function render() {
         document.getElementById('total-count').textContent = guests.length;
+
+        // Stats
+        const adultsCount = guests.filter(g => !g.is_child).length;
+        const childrenCount = guests.filter(g => g.is_child).length;
+        const familyGroups = new Set(guests.map(g => g.family_group).filter(Boolean));
+        const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+        el('stat-total', guests.length);
+        el('stat-adults', adultsCount);
+        el('stat-children', childrenCount);
+        el('stat-families', familyGroups.size);
+
         const list = document.getElementById('guests-list');
         const empty = document.getElementById('inv-empty');
         const hint = document.getElementById('inv-hint');
