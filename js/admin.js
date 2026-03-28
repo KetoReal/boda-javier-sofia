@@ -53,6 +53,11 @@
     function renderDashboard(guests, matchedRealIds) {
         // Stats
         document.getElementById('stat-total').textContent = guests.length;
+        const adultsCount = guests.filter(g => !g.is_child).length;
+        const childrenCount = guests.filter(g => g.is_child).length;
+        const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+        el('stat-adults', adultsCount);
+        el('stat-children', childrenCount);
         const busCount = guests.filter(g => g.autobus && g.autobus !== 'no').length;
         document.getElementById('stat-bus').textContent = busCount;
         const allergyCount = guests.filter(g => g.alergias).length;

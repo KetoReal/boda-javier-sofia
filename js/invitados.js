@@ -42,7 +42,7 @@
 
     async function fetchAll() {
         [guests, virtualGuests] = await Promise.all([
-            api.get('guests', 'order=created_at.desc'),
+            api.get('guests', 'select=*&order=created_at.desc'),
             api.get('virtual_guests', 'select=id,nombre,apellidos,matched_guest_id,menu,autobus,alergias'),
         ]);
     }
