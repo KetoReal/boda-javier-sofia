@@ -242,6 +242,47 @@
 .inv-guest__badge--bus { background: #C9A96E18; color: #A8884C; }
 .inv-guest__badge--car { background: #f5f5f5; color: #999; }
 .inv-guest__badge--allergy { background: #fff3e0; color: #e65100; }
+.inv-guest__badge--child { background: #e8f5e9; color: #2e7d32; }
+
+/* Family group wrapper */
+.inv-family-group {
+    margin-bottom: 20px;
+    border: 2px solid #C9A96E;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fffef9;
+}
+
+.inv-family-group__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #faf6ee, #f5efe4);
+    border-bottom: 1px solid #ece8e0;
+    color: #A8884C;
+}
+
+.inv-family-group__title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    flex: 1;
+}
+
+.inv-family-group__count {
+    font-size: 0.78rem;
+    color: #bbb;
+    font-weight: 400;
+}
+
+.inv-family-group .inv-guest {
+    border-bottom: 1px solid #f0ece6;
+}
+
+.inv-family-group .inv-guest:last-child {
+    border-bottom: none;
+}
 
 .inv-guest__edit {
     background: none;
