@@ -183,7 +183,9 @@
         const busLabel = guest.autobus === 'no' ? 'Propio' : guest.autobus === 'plaza-castilla' ? 'P. Castilla' : guest.autobus === 'alcobendas' ? 'Alcobendas' : '';
 
         let badges = '';
-        if (guest.is_child) badges += '<span class="inv-guest__badge inv-guest__badge--child">Niño/a</span>';
+        badges += guest.is_child
+            ? '<span class="inv-guest__badge inv-guest__badge--child">Niño/a</span>'
+            : '<span class="inv-guest__badge inv-guest__badge--adult">Adulto</span>';
         if (guest.menu) badges += `<span class="inv-guest__badge inv-guest__badge--${guest.menu}">${menuLabel}</span>`;
         if (guest.autobus && guest.autobus !== 'no') badges += `<span class="inv-guest__badge inv-guest__badge--bus">${busLabel}</span>`;
         else if (guest.autobus === 'no') badges += `<span class="inv-guest__badge inv-guest__badge--car">Propio</span>`;
