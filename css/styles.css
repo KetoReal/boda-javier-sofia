@@ -1061,6 +1061,237 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ══════════════════════════════════════════════
+   RSVP — Family counter + dynamic cards
+   ══════════════════════════════════════════════ */
+
+/* Counter selectors (adults / children) */
+.rsvp__counters {
+    margin: 28px 0 24px;
+    padding: 20px;
+    background: var(--cream);
+    border-radius: var(--radius-sm);
+    border: 1.5px solid #ece8e0;
+}
+
+.rsvp__counters-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 16px;
+    text-align: center;
+}
+
+.rsvp__counter-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #ece8e0;
+}
+
+.rsvp__counter-row:last-of-type {
+    border-bottom: none;
+}
+
+.rsvp__counter-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.rsvp__counter-label {
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.rsvp__counter-detail {
+    font-size: 0.78rem;
+    color: var(--carbon-light);
+}
+
+.rsvp__counter-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.rsvp__counter-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid var(--gold-light);
+    background: var(--white);
+    color: var(--gold);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.rsvp__counter-btn:hover {
+    background: var(--gold);
+    color: var(--white);
+    border-color: var(--gold);
+}
+
+.rsvp__counter-btn:active {
+    transform: scale(0.92);
+}
+
+.rsvp__counter-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+    background: var(--white);
+    color: var(--carbon-light);
+    border-color: #ddd;
+}
+
+.rsvp__counter-btn:disabled:hover {
+    background: var(--white);
+    color: var(--carbon-light);
+    border-color: #ddd;
+}
+
+.rsvp__counter-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.5rem;
+    min-width: 32px;
+    text-align: center;
+}
+
+.rsvp__counters-summary {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--gold-dark);
+    font-weight: 500;
+    margin-top: 12px;
+}
+
+/* Member name cards (Step 2) */
+.rsvp__member-card {
+    padding: 16px;
+    margin-bottom: 12px;
+    background: var(--cream);
+    border-radius: var(--radius-sm);
+    border: 1.5px solid #ece8e0;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.rsvp__member-card--child {
+    border-left: 3px solid var(--olive);
+}
+
+.rsvp__member-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.rsvp__member-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--gold-light);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.rsvp__member-card--child .rsvp__member-icon {
+    background: var(--olive);
+}
+
+.rsvp__member-title {
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.rsvp__member-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+@media (max-width: 480px) {
+    .rsvp__member-fields {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Menu per person (Step 4) */
+.rsvp__menu-person {
+    padding: 16px;
+    margin-bottom: 16px;
+    background: var(--cream);
+    border-radius: var(--radius-sm);
+    border: 1.5px solid #ece8e0;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.rsvp__menu-person-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rsvp__menu-person-name .rsvp__member-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+}
+
+.rsvp__menu-person .rsvp__options--menu {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.rsvp__menu-person .rsvp__circle-icon {
+    width: 56px;
+    height: 56px;
+    padding: 12px;
+}
+
+.rsvp__menu-person .rsvp__circle-label {
+    font-size: 0.7rem;
+}
+
+.rsvp__menu-person .rsvp__form-group--allergy {
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+.rsvp__menu-person .rsvp__textarea {
+    min-height: 50px;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 480px) {
+    .rsvp__menu-person .rsvp__options--menu {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+    }
+    .rsvp__menu-person .rsvp__circle-icon {
+        width: 48px;
+        height: 48px;
+        padding: 10px;
+    }
+}
+
+/* ══════════════════════════════════════════════
    TIMELINE
    ══════════════════════════════════════════════ */
 .eventos {

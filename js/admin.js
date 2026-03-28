@@ -1,5 +1,6 @@
 /* ══════════════════════════════════════════════
    ADMIN DASHBOARD — Logic
+   ALL DATA FROM SUPABASE (no localStorage)
    ══════════════════════════════════════════════ */
 
 (function () {
@@ -9,6 +10,13 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MTY2MDMsImV4cCI6MjA5MDA5MjYwM30.jWQrW6FqArq87w50YALA9CUxahyPzwHBQLd9kI7U4qY';
     const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUxNjYwMywiZXhwIjoyMDkwMDkyNjAzfQ.-CM_Wku1-fWqtbz8flSb3MFabrxFnoED047cT81hgAs';
 
+    function authHeaders() {
+        return {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+        };
+    }
+
     // ── Logout ──
     document.getElementById('logout-btn').addEventListener('click', (e) => {
         e.preventDefault();
@@ -17,39 +25,32 @@
         window.location.href = 'index.html';
     });
 
-    // ── Load guests ──
-    async function loadGuests() {
+    // ── Load data ──
+    async function loadDashboard() {
         let guests = [];
+        let virtualGuests = [];
 
-        if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
-            try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/guests?order=created_at.desc`, {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
-                    },
-                });
-                guests = await res.json();
-            } catch (err) {
-                console.warn('Supabase fetch failed:', err);
-            }
+        try {
+            const [gRes, vRes] = await Promise.all([
+                fetch(`${SUPABASE_URL}/rest/v1/guests?order=created_at.desc`, { headers: authHeaders() }),
+                fetch(`${SUPABASE_URL}/rest/v1/virtual_guests?select=id,matched_guest_id`, { headers: authHeaders() }),
+            ]);
+            guests = gRes.ok ? await gRes.json() : [];
+            virtualGuests = vRes.ok ? await vRes.json() : [];
+        } catch (err) {
+            console.warn('Supabase fetch failed:', err);
         }
 
-        // Fallback to localStorage
-        if (!guests.length) {
-            guests = JSON.parse(localStorage.getItem('wedding_guests') || '[]');
-        }
+        // Build matched set from virtual_guests
+        const matchedRealIds = new Set(
+            virtualGuests.filter(v => v.matched_guest_id).map(v => String(v.matched_guest_id))
+        );
 
-        renderDashboard(guests);
-    }
-
-    function isConfirmed(guestId) {
-        const matches = JSON.parse(localStorage.getItem('wedding_matches') || '{}');
-        return Object.values(matches).includes(String(guestId));
+        renderDashboard(guests, matchedRealIds);
     }
 
     // ── Render ──
-    function renderDashboard(guests) {
+    function renderDashboard(guests, matchedRealIds) {
         // Stats
         document.getElementById('stat-total').textContent = guests.length;
         const busCount = guests.filter(g => g.autobus && g.autobus !== 'no').length;
@@ -87,16 +88,16 @@
                 : `<span class="badge badge--bus">${g.autobus === 'plaza-castilla' ? 'P. Castilla' : 'Alcobendas'}</span>`;
             const date = g.created_at ? new Date(g.created_at).toLocaleDateString('es-ES') : '-';
 
-            const confirmed = isConfirmed(g.id);
+            const confirmed = matchedRealIds.has(String(g.id));
             const confirmBadge = confirmed
-                ? '<span class="badge" style="background:#e8f5e9;color:#2e7d32">✓ Vinculado</span>'
+                ? '<span class="badge" style="background:#e8f5e9;color:#2e7d32">\u2713 Vinculado</span>'
                 : '<span class="badge" style="background:#f5f5f5;color:#999">Pendiente</span>';
 
             return `<tr${confirmed ? ' style="background:#f6fef6"' : ''}>
                 <td><strong>${esc(g.nombre)}</strong> ${esc(g.apellidos)}</td>
                 <td>${busBadge}</td>
                 <td>${menuBadge}</td>
-                <td>${g.alergias ? esc(g.alergias) : '<span style="color:#ccc">—</span>'}</td>
+                <td>${g.alergias ? esc(g.alergias) : '<span style="color:#ccc">\u2014</span>'}</td>
                 <td>${confirmBadge}</td>
                 <td style="color:#999;font-size:0.8rem">${date}</td>
             </tr>`;
@@ -120,9 +121,14 @@
         }).join('');
     }
 
-    // ── Export CSV ──
-    document.getElementById('export-csv').addEventListener('click', () => {
-        let guests = JSON.parse(localStorage.getItem('wedding_guests') || '[]');
+    // ── Export CSV (from Supabase) ──
+    document.getElementById('export-csv').addEventListener('click', async () => {
+        let guests = [];
+        try {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/guests?order=created_at.desc`, { headers: authHeaders() });
+            guests = res.ok ? await res.json() : [];
+        } catch (_) {}
+
         if (!guests.length) { alert('No hay datos para exportar'); return; }
 
         const headers = ['Nombre', 'Apellidos', 'Email', 'Autobus', 'Menu', 'Alergias', 'Fecha'];
@@ -145,5 +151,5 @@
     function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
     // ── Init ──
-    loadGuests();
+    loadDashboard();
 })();

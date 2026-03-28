@@ -1,6 +1,7 @@
 /* ══════════════════════════════════════════════
    SIMULACION — Virtual guests as source of truth
    Groups, Familias, Properties, Auto/Manual Match
+   ALL DATA IN SUPABASE (no localStorage)
    ══════════════════════════════════════════════ */
 
 (function () {
@@ -10,13 +11,91 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MTY2MDMsImV4cCI6MjA5MDA5MjYwM30.jWQrW6FqArq87w50YALA9CUxahyPzwHBQLd9kI7U4qY';
     const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUxNjYwMywiZXhwIjoyMDkwMDkyNjAzfQ.-CM_Wku1-fWqtbz8flSb3MFabrxFnoED047cT81hgAs';
 
+    function authHeaders(prefer) {
+        const h = {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+            'Content-Type': 'application/json',
+        };
+        if (prefer) h['Prefer'] = prefer;
+        return h;
+    }
+
+    const api = {
+        async get(table, query = '') {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, { headers: authHeaders() });
+            return res.ok ? res.json() : [];
+        },
+        async upsert(table, data) {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+                method: 'POST',
+                headers: authHeaders('return=representation,resolution=merge-duplicates'),
+                body: JSON.stringify(Array.isArray(data) ? data : [data]),
+            });
+            return res.ok ? res.json() : [];
+        },
+        async patch(table, match, data) {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${match}`, {
+                method: 'PATCH',
+                headers: authHeaders('return=representation'),
+                body: JSON.stringify(data),
+            });
+            return res.ok ? res.json() : [];
+        },
+        async del(table, match) {
+            await fetch(`${SUPABASE_URL}/rest/v1/${table}?${match}`, {
+                method: 'DELETE', headers: authHeaders(),
+            });
+        },
+    };
+
     let realGuests = [];
-    let virtualGuests = JSON.parse(localStorage.getItem('wedding_virtual_guests') || '[]');
-    let matches = JSON.parse(localStorage.getItem('wedding_matches') || '{}');
-    let groups = JSON.parse(localStorage.getItem('wedding_virtual_groups') || '[]');
-    let vGuestGroups = JSON.parse(localStorage.getItem('wedding_vguest_groups') || '{}');
-    let vGuestFamilias = JSON.parse(localStorage.getItem('wedding_vguest_familias') || '{}');
+    let virtualGuests = [];
+    let groups = [];
     let selected = new Set();
+
+    // ── Load all data from Supabase ──
+    async function loadAll() {
+        [realGuests, virtualGuests, groups] = await Promise.all([
+            api.get('guests', 'order=created_at.desc'),
+            api.get('virtual_guests', 'order=created_at.asc'),
+            api.get('guest_groups', 'order=created_at.asc'),
+        ]);
+        render();
+    }
+
+    // ── Save helpers ──
+    async function saveVirtualGuest(vg) {
+        const row = {
+            id: vg.id,
+            nombre: vg.nombre,
+            apellidos: vg.apellidos || '',
+            menu: vg.menu || null,
+            autobus: vg.autobus || null,
+            alergias: vg.alergias || null,
+            matched_guest_id: vg.matched_guest_id || null,
+            group_id: vg.group_id || null,
+            familia: vg.familia || null,
+        };
+        await api.upsert('virtual_guests', row);
+    }
+
+    async function deleteVirtualGuest(id) {
+        await api.del('virtual_guests', `id=eq.${encodeURIComponent(id)}`);
+        virtualGuests = virtualGuests.filter(v => v.id !== id);
+    }
+
+    async function saveGroup(group) {
+        await api.upsert('guest_groups', { id: group.id, name: group.name, color: group.color || '#C9A96E' });
+    }
+
+    async function deleteGroup(groupId) {
+        // Unassign guests from this group first
+        await api.patch('virtual_guests', `group_id=eq.${encodeURIComponent(groupId)}`, { group_id: null });
+        await api.del('guest_groups', `id=eq.${encodeURIComponent(groupId)}`);
+        virtualGuests.forEach(v => { if (v.group_id === groupId) v.group_id = null; });
+        groups = groups.filter(g => g.id !== groupId);
+    }
 
     // ── Selection ──
     function toggleSelect(id) {
@@ -45,26 +124,6 @@
         }
     }
 
-    async function fetchRealGuests() {
-        try {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/guests?order=created_at.desc`, {
-                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}` },
-            });
-            const data = await res.json();
-            if (Array.isArray(data)) realGuests = data;
-        } catch (_) { realGuests = []; }
-    }
-
-    function save() {
-        localStorage.setItem('wedding_virtual_guests', JSON.stringify(virtualGuests));
-        localStorage.setItem('wedding_matches', JSON.stringify(matches));
-        if (window.updateBudgetBar) window.updateBudgetBar();
-    }
-
-    function saveGroups() { localStorage.setItem('wedding_virtual_groups', JSON.stringify(groups)); }
-    function saveVGuestGroups() { localStorage.setItem('wedding_vguest_groups', JSON.stringify(vGuestGroups)); }
-    function saveVGuestFamilias() { localStorage.setItem('wedding_vguest_familias', JSON.stringify(vGuestFamilias)); }
-
     // ── Normalize for matching ──
     function normalize(s) {
         return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -83,7 +142,7 @@
     function findBestMatch(vg) {
         const vName = `${vg.nombre} ${vg.apellidos}`;
         let best = null, bestScore = 0;
-        const matchedRealIds = new Set(Object.values(matches));
+        const matchedRealIds = new Set(virtualGuests.filter(v => v.matched_guest_id).map(v => String(v.matched_guest_id)));
 
         realGuests.forEach(rg => {
             if (matchedRealIds.has(String(rg.id))) return;
@@ -100,14 +159,14 @@
         if (rg.menu) vg.menu = rg.menu;
         if (rg.autobus) vg.autobus = rg.autobus;
         if (rg.alergias) vg.alergias = rg.alergias;
-        save();
     }
 
     // ── Get familia members for drag ──
     function getFamiliaMembers(vgId) {
-        const fam = vGuestFamilias[vgId];
+        const vg = virtualGuests.find(v => v.id === vgId);
+        const fam = vg ? vg.familia : null;
         if (!fam) return [String(vgId)];
-        return virtualGuests.filter(v => vGuestFamilias[v.id] === fam).map(v => String(v.id));
+        return virtualGuests.filter(v => v.familia === fam).map(v => String(v.id));
     }
 
     // ── Badge HTML helper ──
@@ -131,7 +190,7 @@
 
     // ── Render ──
     function render() {
-        const matchedCount = Object.keys(matches).length;
+        const matchedCount = virtualGuests.filter(v => v.matched_guest_id).length;
         document.getElementById('stat-total').textContent = virtualGuests.length;
         document.getElementById('stat-matched').textContent = matchedCount;
         document.getElementById('stat-pending').textContent = virtualGuests.length - matchedCount;
@@ -152,7 +211,7 @@
 
         // Render each group
         groups.forEach(group => {
-            const groupVGuests = virtualGuests.filter(v => vGuestGroups[v.id] === group.id);
+            const groupVGuests = virtualGuests.filter(v => v.group_id === group.id);
             const section = document.createElement('div');
             section.className = 'inv-group';
             section.style.borderLeftColor = group.color || '#C9A96E';
@@ -189,13 +248,10 @@
                 list.innerHTML = '<div class="inv-empty">Arrastra invitados aqui</div>';
             }
 
-            section.querySelector('.inv-group__btn--delete').addEventListener('click', () => {
+            section.querySelector('.inv-group__btn--delete').addEventListener('click', async () => {
                 if (!confirm(`Eliminar el grupo "${group.name}"?`)) return;
-                Object.keys(vGuestGroups).forEach(vid => {
-                    if (vGuestGroups[vid] === group.id) delete vGuestGroups[vid];
-                });
-                groups = groups.filter(gr => gr.id !== group.id);
-                saveGroups(); saveVGuestGroups(); render();
+                await deleteGroup(group.id);
+                render();
             });
 
             setupDropZone(section, group.id);
@@ -203,7 +259,7 @@
         });
 
         // Ungrouped
-        const ungrouped = virtualGuests.filter(v => !vGuestGroups[v.id]);
+        const ungrouped = virtualGuests.filter(v => !v.group_id);
         document.getElementById('ungrouped-count').textContent = ungrouped.length;
         const ungroupedList = document.getElementById('ungrouped-list');
         ungroupedList.innerHTML = '';
@@ -229,6 +285,8 @@
                 updateSelectionUI();
             });
         }
+
+        if (window.updateBudgetBar) window.updateBudgetBar();
     }
 
     // ── Render virtual guests grouped by familia within a list ──
@@ -238,16 +296,15 @@
 
         // Sort: matched first
         const sorted = [...guestList].sort((a, b) => {
-            const am = matches[a.id] ? 0 : 1;
-            const bm = matches[b.id] ? 0 : 1;
+            const am = a.matched_guest_id ? 0 : 1;
+            const bm = b.matched_guest_id ? 0 : 1;
             return am - bm || a.nombre.localeCompare(b.nombre);
         });
 
         sorted.forEach(vg => {
-            const fam = vGuestFamilias[vg.id];
-            if (fam) {
-                if (!familias[fam]) familias[fam] = [];
-                familias[fam].push(vg);
+            if (vg.familia) {
+                if (!familias[vg.familia]) familias[vg.familia] = [];
+                familias[vg.familia].push(vg);
             } else {
                 noFamilia.push(vg);
             }
@@ -270,10 +327,9 @@
     }
 
     function createVGuestRow(vg) {
-        const isMatched = !!matches[vg.id];
-        const matchedReal = isMatched ? realGuests.find(r => String(r.id) === String(matches[vg.id])) : null;
+        const isMatched = !!vg.matched_guest_id;
+        const matchedReal = isMatched ? realGuests.find(r => String(r.id) === String(vg.matched_guest_id)) : null;
         const initials = ((vg.nombre || '')[0] || '') + ((vg.apellidos || '')[0] || '');
-        const famName = vGuestFamilias[vg.id] || '';
 
         const row = document.createElement('div');
         row.className = `vguest ${isMatched ? 'vguest--matched' : 'vguest--pending'}`;
@@ -289,7 +345,7 @@
             <div class="vguest__info">
                 <div class="vguest__name">${esc(vg.nombre)} ${esc(vg.apellidos)}</div>
                 <div class="vguest__meta">
-                    ${famName ? `<span class="inv-guest__fam-tag">${esc(famName)}</span>` : ''}
+                    ${vg.familia ? `<span class="inv-guest__fam-tag">${esc(vg.familia)}</span>` : ''}
                     ${isMatched && matchedReal
                         ? `Registrado: ${esc(matchedReal.nombre)} ${esc(matchedReal.apellidos)}`
                         : 'Sin confirmar'}
@@ -327,14 +383,11 @@
         });
 
         // Delete
-        row.querySelector('.vguest__btn--delete').addEventListener('click', (e) => {
+        row.querySelector('.vguest__btn--delete').addEventListener('click', async (e) => {
             e.stopPropagation();
             if (!confirm(`Eliminar a ${vg.nombre} ${vg.apellidos}?`)) return;
-            virtualGuests = virtualGuests.filter(v => v.id !== vg.id);
-            delete matches[vg.id];
-            delete vGuestGroups[vg.id];
-            delete vGuestFamilias[vg.id];
-            save(); saveVGuestGroups(); saveVGuestFamilias(); render();
+            await deleteVirtualGuest(vg.id);
+            render();
         });
 
         // Checkbox
@@ -382,35 +435,40 @@
         element.addEventListener('dragleave', (e) => {
             if (!element.contains(e.relatedTarget)) element.classList.remove('inv-group--drag-over');
         });
-        element.addEventListener('drop', (e) => {
+        element.addEventListener('drop', async (e) => {
             e.preventDefault();
             element.classList.remove('inv-group--drag-over');
             let ids = [];
             try { ids = JSON.parse(e.dataTransfer.getData('application/json')); } catch (_) {}
             if (!ids.length) return;
 
-            ids.forEach(id => {
-                if (groupId) vGuestGroups[id] = groupId;
-                else delete vGuestGroups[id];
+            // Update in-memory and Supabase
+            const updates = ids.map(id => {
+                const vg = virtualGuests.find(v => v.id === id);
+                if (vg) vg.group_id = groupId || null;
+                return api.patch('virtual_guests', `id=eq.${encodeURIComponent(id)}`, { group_id: groupId || null });
             });
-            saveVGuestGroups();
+            await Promise.all(updates);
             render();
         });
     }
 
     // ── Auto-match all ──
-    document.getElementById('btn-auto-match').addEventListener('click', () => {
+    document.getElementById('btn-auto-match').addEventListener('click', async () => {
         let found = 0;
+        const saves = [];
         virtualGuests.forEach(vg => {
-            if (matches[vg.id]) return;
+            if (vg.matched_guest_id) return;
             const best = findBestMatch(vg);
             if (best) {
-                matches[vg.id] = String(best.id);
+                vg.matched_guest_id = best.id;
                 syncFromReal(vg, best);
+                saves.push(saveVirtualGuest(vg));
                 found++;
             }
         });
-        save(); render();
+        await Promise.all(saves);
+        render();
         alert(found > 0 ? `${found} match(es) encontrados automaticamente.` : 'No se encontraron nuevos matches.');
     });
 
@@ -421,7 +479,7 @@
         currentVGuest = vg;
         document.getElementById('match-for').querySelector('strong').textContent = `${vg.nombre} ${vg.apellidos}`;
         document.getElementById('match-search').value = '';
-        document.getElementById('match-unlink').style.display = matches[vg.id] ? 'inline-flex' : 'none';
+        document.getElementById('match-unlink').style.display = vg.matched_guest_id ? 'inline-flex' : 'none';
         renderMatchResults('');
         document.getElementById('match-modal').classList.add('active');
         document.getElementById('match-search').focus();
@@ -429,13 +487,13 @@
 
     function renderMatchResults(query) {
         const container = document.getElementById('match-results');
-        const matchedRealIds = new Set(Object.values(matches));
+        const matchedRealIds = new Set(virtualGuests.filter(v => v.matched_guest_id).map(v => String(v.matched_guest_id)));
         const q = normalize(query);
 
         let candidates = realGuests.map(rg => {
             const fullName = `${rg.nombre} ${rg.apellidos}`;
             const score = q ? similarity(fullName, query) : similarity(fullName, `${currentVGuest.nombre} ${currentVGuest.apellidos}`);
-            const alreadyMatched = matchedRealIds.has(String(rg.id)) && String(matches[currentVGuest.id]) !== String(rg.id);
+            const alreadyMatched = matchedRealIds.has(String(rg.id)) && String(currentVGuest.matched_guest_id) !== String(rg.id);
             return { ...rg, score, alreadyMatched };
         });
 
@@ -447,7 +505,7 @@
 
         container.innerHTML = candidates.slice(0, 20).map(rg => {
             const initials = ((rg.nombre || '')[0] || '') + ((rg.apellidos || '')[0] || '');
-            const isCurrent = String(matches[currentVGuest.id]) === String(rg.id);
+            const isCurrent = String(currentVGuest.matched_guest_id) === String(rg.id);
             return `
                 <div class="match-result" data-real-id="${rg.id}" ${rg.alreadyMatched ? 'style="opacity:0.4"' : ''}>
                     <div class="match-result__avatar">${initials.toUpperCase()}</div>
@@ -461,12 +519,13 @@
         }).join('') || '<p style="text-align:center;color:#999;padding:20px">No hay registros que coincidan</p>';
 
         container.querySelectorAll('.match-result').forEach(el => {
-            el.addEventListener('click', () => {
-                const realId = el.dataset.realId;
-                const realGuest = realGuests.find(r => String(r.id) === realId);
-                matches[currentVGuest.id] = realId;
+            el.addEventListener('click', async () => {
+                const realId = parseInt(el.dataset.realId);
+                const realGuest = realGuests.find(r => r.id === realId);
+                currentVGuest.matched_guest_id = realId;
                 if (realGuest) syncFromReal(currentVGuest, realGuest);
-                save(); render();
+                await saveVirtualGuest(currentVGuest);
+                render();
                 document.getElementById('match-modal').classList.remove('active');
             });
         });
@@ -480,10 +539,11 @@
         document.getElementById('match-modal').classList.remove('active');
     });
 
-    document.getElementById('match-unlink').addEventListener('click', () => {
+    document.getElementById('match-unlink').addEventListener('click', async () => {
         if (currentVGuest) {
-            delete matches[currentVGuest.id];
-            save(); render();
+            currentVGuest.matched_guest_id = null;
+            await saveVirtualGuest(currentVGuest);
+            render();
         }
         document.getElementById('match-modal').classList.remove('active');
     });
@@ -504,7 +564,7 @@
         const dl = document.getElementById('vfamilias-list');
         const chips = document.getElementById('familia-chips');
         if (!dl) return;
-        const unique = [...new Set(Object.values(vGuestFamilias).filter(Boolean))];
+        const unique = [...new Set(virtualGuests.map(v => v.familia).filter(Boolean))];
         dl.innerHTML = unique.map(f => `<option value="${esc(f)}">`).join('');
 
         // Render clickable chips for quick assignment
@@ -516,7 +576,6 @@
                 btn.addEventListener('click', () => {
                     const input = document.getElementById('ef-familia');
                     input.value = btn.dataset.fam;
-                    // Highlight active
                     chips.querySelectorAll('.familia-chip').forEach(b => b.classList.remove('familia-chip--active'));
                     btn.classList.add('familia-chip--active');
                 });
@@ -532,14 +591,14 @@
         document.getElementById('ef-menu').value = vg.menu || '';
         document.getElementById('ef-autobus').value = vg.autobus || '';
         document.getElementById('ef-alergias').value = vg.alergias || '';
-        document.getElementById('ef-familia').value = vGuestFamilias[vg.id] || '';
-        document.getElementById('ef-confirmed').checked = !!matches[vg.id];
+        document.getElementById('ef-familia').value = vg.familia || '';
+        document.getElementById('ef-confirmed').checked = !!vg.matched_guest_id;
         document.getElementById('edit-delete').style.display = 'inline-flex';
-        populateGroupSelect(document.getElementById('ef-grupo'), vGuestGroups[vg.id] || '');
+        populateGroupSelect(document.getElementById('ef-grupo'), vg.group_id || '');
         populateFamiliaDatalist();
 
         // Highlight current familia chip
-        const currentFam = vGuestFamilias[vg.id] || '';
+        const currentFam = vg.familia || '';
         document.querySelectorAll('.familia-chip').forEach(btn => {
             btn.classList.toggle('familia-chip--active', btn.dataset.fam === currentFam);
         });
@@ -552,7 +611,7 @@
         document.getElementById('edit-modal').classList.remove('active');
     }
 
-    document.getElementById('edit-form').addEventListener('submit', (e) => {
+    document.getElementById('edit-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('edit-id').value;
         const vg = virtualGuests.find(v => v.id === id);
@@ -568,28 +627,22 @@
         vg.alergias = document.getElementById('ef-alergias').value.trim() || null;
 
         // Group
-        const groupId = document.getElementById('ef-grupo').value;
-        if (groupId) vGuestGroups[vg.id] = groupId;
-        else delete vGuestGroups[vg.id];
+        vg.group_id = document.getElementById('ef-grupo').value || null;
 
         // Familia
-        const fam = document.getElementById('ef-familia').value.trim();
-        if (fam) vGuestFamilias[vg.id] = fam;
-        else delete vGuestFamilias[vg.id];
+        vg.familia = document.getElementById('ef-familia').value.trim() || null;
 
-        save(); saveVGuestGroups(); saveVGuestFamilias(); render();
+        await saveVirtualGuest(vg);
+        render();
         closeEditModal();
     });
 
-    document.getElementById('edit-delete').addEventListener('click', () => {
+    document.getElementById('edit-delete').addEventListener('click', async () => {
         const id = document.getElementById('edit-id').value;
         const vg = virtualGuests.find(v => v.id === id);
         if (!vg || !confirm(`Eliminar a ${vg.nombre} ${vg.apellidos}?`)) return;
-        virtualGuests = virtualGuests.filter(v => v.id !== id);
-        delete matches[id];
-        delete vGuestGroups[id];
-        delete vGuestFamilias[id];
-        save(); saveVGuestGroups(); saveVGuestFamilias(); render();
+        await deleteVirtualGuest(id);
+        render();
         closeEditModal();
     });
 
@@ -620,11 +673,12 @@
         });
     });
 
-    document.getElementById('group-save').addEventListener('click', () => {
+    document.getElementById('group-save').addEventListener('click', async () => {
         const name = document.getElementById('g-nombre').value.trim();
         if (!name) return;
-        groups.push({ id: 'g_' + Date.now(), name, color: selectedColor });
-        saveGroups();
+        const group = { id: 'g_' + Date.now(), name, color: selectedColor };
+        groups.push(group);
+        await saveGroup(group);
         document.getElementById('group-modal').classList.remove('active');
         render();
     });
@@ -648,12 +702,12 @@
         reader.readAsText(file);
     });
 
-    document.getElementById('import-confirm').addEventListener('click', () => {
+    document.getElementById('import-confirm').addEventListener('click', async () => {
         const text = document.getElementById('import-text').value.trim();
         if (!text) return;
 
         const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-        let added = 0;
+        const newGuests = [];
 
         lines.forEach(line => {
             if (/^nombre/i.test(line)) return;
@@ -677,20 +731,28 @@
             );
             if (exists) return;
 
-            virtualGuests.push({
+            const vg = {
                 id: 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
                 nombre,
                 apellidos,
                 menu: null,
                 autobus: null,
                 alergias: null,
-            });
-            added++;
+                matched_guest_id: null,
+                group_id: null,
+                familia: null,
+            };
+            newGuests.push(vg);
+            virtualGuests.push(vg);
         });
 
-        save(); render();
+        if (newGuests.length > 0) {
+            await api.upsert('virtual_guests', newGuests);
+        }
+
+        render();
         document.getElementById('import-modal').classList.remove('active');
-        alert(`${added} invitado(s) importado(s).`);
+        alert(`${newGuests.length} invitado(s) importado(s).`);
     });
 
     // ── Quick Add ──
@@ -705,20 +767,25 @@
         document.getElementById('quickadd-modal').classList.remove('active');
     });
 
-    document.getElementById('qa-save').addEventListener('click', () => {
+    document.getElementById('qa-save').addEventListener('click', async () => {
         const nombre = document.getElementById('qa-nombre').value.trim();
         const apellidos = document.getElementById('qa-apellidos').value.trim();
         if (!nombre) return;
 
-        virtualGuests.push({
+        const vg = {
             id: 'v_' + Date.now(),
             nombre,
             apellidos: apellidos || '',
             menu: null,
             autobus: null,
             alergias: null,
-        });
-        save(); render();
+            matched_guest_id: null,
+            group_id: null,
+            familia: null,
+        };
+        virtualGuests.push(vg);
+        await saveVirtualGuest(vg);
+        render();
 
         // Keep modal open for rapid entry
         document.getElementById('qa-nombre').value = '';
@@ -738,16 +805,12 @@
 
     document.getElementById('sel-clear').addEventListener('click', clearSelection);
 
-    document.getElementById('sel-delete').addEventListener('click', () => {
+    document.getElementById('sel-delete').addEventListener('click', async () => {
         if (!confirm(`¿Eliminar ${selected.size} invitados?`)) return;
-        selected.forEach(id => {
-            virtualGuests = virtualGuests.filter(v => v.id !== id);
-            delete matches[id];
-            delete vGuestGroups[id];
-            delete vGuestFamilias[id];
-        });
+        const deletes = [...selected].map(id => deleteVirtualGuest(id));
+        await Promise.all(deletes);
         selected.clear();
-        save(); saveVGuestGroups(); saveVGuestFamilias(); render();
+        render();
     });
 
     document.getElementById('sel-move').addEventListener('click', () => {
@@ -761,13 +824,14 @@
         document.getElementById('bulk-move-modal').classList.remove('active');
     });
 
-    document.getElementById('bulk-confirm').addEventListener('click', () => {
-        const groupId = document.getElementById('bulk-grupo').value;
-        selected.forEach(id => {
-            if (groupId) vGuestGroups[id] = groupId;
-            else delete vGuestGroups[id];
+    document.getElementById('bulk-confirm').addEventListener('click', async () => {
+        const groupId = document.getElementById('bulk-grupo').value || null;
+        const updates = [...selected].map(id => {
+            const vg = virtualGuests.find(v => v.id === id);
+            if (vg) vg.group_id = groupId;
+            return api.patch('virtual_guests', `id=eq.${encodeURIComponent(id)}`, { group_id: groupId });
         });
-        saveVGuestGroups();
+        await Promise.all(updates);
         document.getElementById('bulk-move-modal').classList.remove('active');
         clearSelection(); render();
     });
@@ -789,9 +853,5 @@
 
     function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-    async function init() {
-        await fetchRealGuests();
-        render();
-    }
-    init();
+    loadAll();
 })();

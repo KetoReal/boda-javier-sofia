@@ -1,11 +1,16 @@
 /* ══════════════════════════════════════════════
    BUDGET BAR — Shared component across admin pages
    Shows previsto (virtual) & confirmado (matched) counts + cost
+   ALL DATA FROM SUPABASE (no localStorage)
    ══════════════════════════════════════════════ */
 (function () {
     'use strict';
 
     const COST_PER_GUEST = 125;
+
+    const SUPABASE_URL = 'https://lpatzgviideumccecfew.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MTY2MDMsImV4cCI6MjA5MDA5MjYwM30.jWQrW6FqArq87w50YALA9CUxahyPzwHBQLd9kI7U4qY';
+    const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUxNjYwMywiZXhwIjoyMDkwMDkyNjAzfQ.-CM_Wku1-fWqtbz8flSb3MFabrxFnoED047cT81hgAs';
 
     function formatCurrency(n) {
         return n.toLocaleString('es-ES') + '\u2009\u20AC';
@@ -42,22 +47,31 @@
         }
     }
 
-    function update() {
-        const virtuals = JSON.parse(localStorage.getItem('wedding_virtual_guests') || '[]');
-        const matches = JSON.parse(localStorage.getItem('wedding_matches') || '{}');
+    async function update() {
+        try {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/virtual_guests?select=id,matched_guest_id`, {
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                },
+            });
+            const virtuals = res.ok ? await res.json() : [];
 
-        const totalVirtual = virtuals.length;
-        const matchedCount = Object.keys(matches).length;
+            const totalVirtual = virtuals.length;
+            const matchedCount = virtuals.filter(v => v.matched_guest_id).length;
 
-        const prevCount = document.getElementById('bb-prev-count');
-        const prevCost = document.getElementById('bb-prev-cost');
-        const confCount = document.getElementById('bb-conf-count');
-        const confCost = document.getElementById('bb-conf-cost');
+            const prevCount = document.getElementById('bb-prev-count');
+            const prevCost = document.getElementById('bb-prev-cost');
+            const confCount = document.getElementById('bb-conf-count');
+            const confCost = document.getElementById('bb-conf-cost');
 
-        if (prevCount) prevCount.textContent = totalVirtual;
-        if (prevCost) prevCost.textContent = formatCurrency(totalVirtual * COST_PER_GUEST);
-        if (confCount) confCount.textContent = matchedCount;
-        if (confCost) confCost.textContent = formatCurrency(matchedCount * COST_PER_GUEST);
+            if (prevCount) prevCount.textContent = totalVirtual;
+            if (prevCost) prevCost.textContent = formatCurrency(totalVirtual * COST_PER_GUEST);
+            if (confCount) confCount.textContent = matchedCount;
+            if (confCost) confCost.textContent = formatCurrency(matchedCount * COST_PER_GUEST);
+        } catch (err) {
+            console.warn('Budget bar fetch failed:', err);
+        }
     }
 
     // Inject CSS
@@ -127,8 +141,8 @@
     createBar();
     update();
 
-    // Re-update every 2 seconds to pick up changes from other scripts
-    setInterval(update, 2000);
+    // Re-update every 5 seconds to pick up changes from other scripts
+    setInterval(update, 5000);
 
     // Also expose a global so other scripts can trigger immediate refresh
     window.updateBudgetBar = update;

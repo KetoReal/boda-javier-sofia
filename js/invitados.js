@@ -2,6 +2,7 @@
    INVITADOS — Read-only list of RSVP registered guests
    Edit/Delete for admin corrections.
    Manual match to link real → virtual.
+   ALL DATA IN SUPABASE (no localStorage)
    ══════════════════════════════════════════════ */
 
 (function () {
@@ -11,23 +12,39 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MTY2MDMsImV4cCI6MjA5MDA5MjYwM30.jWQrW6FqArq87w50YALA9CUxahyPzwHBQLd9kI7U4qY';
     const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUxNjYwMywiZXhwIjoyMDkwMDkyNjAzfQ.-CM_Wku1-fWqtbz8flSb3MFabrxFnoED047cT81hgAs';
 
-    let guests = [];
-
-    function authHeaders() {
-        return {
+    function authHeaders(prefer) {
+        const h = {
             'apikey': SUPABASE_ANON_KEY,
             'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
             'Content-Type': 'application/json',
-            'Prefer': 'return=representation',
         };
+        if (prefer) h['Prefer'] = prefer;
+        return h;
     }
 
-    async function fetchGuests() {
-        try {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/guests?order=created_at.desc`, { headers: authHeaders() });
-            const data = await res.json();
-            if (Array.isArray(data)) guests = data;
-        } catch (err) { guests = []; }
+    const api = {
+        async get(table, query = '') {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, { headers: authHeaders() });
+            return res.ok ? res.json() : [];
+        },
+        async patch(table, match, data) {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${match}`, {
+                method: 'PATCH',
+                headers: authHeaders('return=representation'),
+                body: JSON.stringify(data),
+            });
+            return res.ok ? res.json() : [];
+        },
+    };
+
+    let guests = [];
+    let virtualGuests = [];
+
+    async function fetchAll() {
+        [guests, virtualGuests] = await Promise.all([
+            api.get('guests', 'order=created_at.desc'),
+            api.get('virtual_guests', 'select=id,nombre,apellidos,matched_guest_id,menu,autobus,alergias'),
+        ]);
     }
 
     async function upsertGuest(guest) {
@@ -36,40 +53,24 @@
         const url = isEdit ? `${SUPABASE_URL}/rest/v1/guests?id=eq.${guest.id}` : `${SUPABASE_URL}/rest/v1/guests`;
         const body = { ...guest };
         delete body.id;
-        const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+        const res = await fetch(url, { method, headers: authHeaders('return=representation'), body: JSON.stringify(body) });
         return res.json();
     }
 
     async function deleteGuest(id) {
+        // Unlink any virtual guest matched to this real guest
+        await api.patch('virtual_guests', `matched_guest_id=eq.${id}`, { matched_guest_id: null });
         await fetch(`${SUPABASE_URL}/rest/v1/guests?id=eq.${id}`, { method: 'DELETE', headers: authHeaders() });
     }
 
     // ── Match helpers ──
-    function getMatches() {
-        return JSON.parse(localStorage.getItem('wedding_matches') || '{}');
-    }
-    function saveMatches(m) {
-        localStorage.setItem('wedding_matches', JSON.stringify(m));
-        if (window.updateBudgetBar) window.updateBudgetBar();
-    }
-    function getVirtuals() {
-        return JSON.parse(localStorage.getItem('wedding_virtual_guests') || '[]');
-    }
-    function saveVirtuals(v) {
-        localStorage.setItem('wedding_virtual_guests', JSON.stringify(v));
-    }
-
     function isMatched(guestId) {
-        const matches = getMatches();
-        return Object.values(matches).includes(String(guestId));
+        return virtualGuests.some(v => String(v.matched_guest_id) === String(guestId));
     }
 
     function getMatchedVirtualId(realGuestId) {
-        const matches = getMatches();
-        for (const [vid, rid] of Object.entries(matches)) {
-            if (String(rid) === String(realGuestId)) return vid;
-        }
-        return null;
+        const vg = virtualGuests.find(v => String(v.matched_guest_id) === String(realGuestId));
+        return vg ? vg.id : null;
     }
 
     function normalize(s) {
@@ -87,14 +88,14 @@
     }
 
     // ── Sync properties from real to virtual on match ──
-    function syncToVirtual(virtualId, realGuest) {
-        const virtuals = getVirtuals();
-        const vg = virtuals.find(v => v.id === virtualId);
-        if (!vg) return;
-        if (realGuest.menu) vg.menu = realGuest.menu;
-        if (realGuest.autobus) vg.autobus = realGuest.autobus;
-        if (realGuest.alergias) vg.alergias = realGuest.alergias;
-        saveVirtuals(virtuals);
+    async function syncToVirtual(virtualId, realGuest) {
+        const updates = {};
+        if (realGuest.menu) updates.menu = realGuest.menu;
+        if (realGuest.autobus) updates.autobus = realGuest.autobus;
+        if (realGuest.alergias) updates.alergias = realGuest.alergias;
+        if (Object.keys(updates).length > 0) {
+            await api.patch('virtual_guests', `id=eq.${encodeURIComponent(virtualId)}`, updates);
+        }
     }
 
     // ── Render ──
@@ -177,14 +178,8 @@
             row.querySelector('.inv-guest__delete').addEventListener('click', async (e) => {
                 e.stopPropagation();
                 if (!confirm(`Eliminar a ${guest.nombre} ${guest.apellidos}?`)) return;
-                // Also remove any match pointing to this real guest
-                const matches = getMatches();
-                for (const [vid, rid] of Object.entries(matches)) {
-                    if (String(rid) === String(guest.id)) delete matches[vid];
-                }
-                saveMatches(matches);
                 await deleteGuest(guest.id);
-                await fetchGuests(); render();
+                await fetchAll(); render();
             });
 
             list.appendChild(row);
@@ -232,9 +227,9 @@
             // If this real guest is matched to a virtual, sync properties
             const vid = getMatchedVirtualId(id);
             if (vid) {
-                syncToVirtual(vid, data);
+                await syncToVirtual(vid, data);
             }
-            await fetchGuests(); render();
+            await fetchAll(); render();
         } catch (err) { console.error('Save error:', err); }
 
         saveBtn.textContent = 'Guardar';
@@ -245,13 +240,8 @@
     document.getElementById('modal-delete').addEventListener('click', async () => {
         const id = document.getElementById('guest-id').value;
         if (!id || !confirm('Eliminar este invitado?')) return;
-        const matches = getMatches();
-        for (const [vid, rid] of Object.entries(matches)) {
-            if (String(rid) === String(id)) delete matches[vid];
-        }
-        saveMatches(matches);
         await deleteGuest(parseInt(id));
-        await fetchGuests(); render(); closeGuestModal();
+        await fetchAll(); render(); closeGuestModal();
     });
 
     document.getElementById('modal-cancel').addEventListener('click', closeGuestModal);
@@ -272,15 +262,13 @@
 
     function renderLinkResults(query) {
         const container = document.getElementById('link-results');
-        const virtuals = getVirtuals();
-        const matches = getMatches();
         const q = normalize(query);
 
-        let candidates = virtuals.map(vg => {
+        let candidates = virtualGuests.map(vg => {
             const fullName = `${vg.nombre} ${vg.apellidos}`;
             const score = q ? similarity(fullName, query) : similarity(fullName, `${currentRealGuest.nombre} ${currentRealGuest.apellidos}`);
-            const alreadyMatched = !!matches[vg.id] && String(matches[vg.id]) !== String(currentRealGuest.id);
-            const isCurrentMatch = String(matches[vg.id]) === String(currentRealGuest.id);
+            const alreadyMatched = !!vg.matched_guest_id && String(vg.matched_guest_id) !== String(currentRealGuest.id);
+            const isCurrentMatch = String(vg.matched_guest_id) === String(currentRealGuest.id);
             return { ...vg, score, alreadyMatched, isCurrentMatch };
         });
 
@@ -305,18 +293,18 @@
         }).join('') || '<p style="text-align:center;color:#999;padding:20px">No hay virtuales que coincidan</p>';
 
         container.querySelectorAll('.match-result').forEach(el => {
-            el.addEventListener('click', () => {
+            el.addEventListener('click', async () => {
                 const virtualId = el.dataset.virtualId;
-                const matches = getMatches();
-                // Remove any previous match for this real guest
-                for (const [vid, rid] of Object.entries(matches)) {
-                    if (String(rid) === String(currentRealGuest.id)) delete matches[vid];
+                // Unlink any previous virtual guest matched to this real guest
+                const prevVid = getMatchedVirtualId(currentRealGuest.id);
+                if (prevVid) {
+                    await api.patch('virtual_guests', `id=eq.${encodeURIComponent(prevVid)}`, { matched_guest_id: null });
                 }
-                matches[virtualId] = String(currentRealGuest.id);
-                saveMatches(matches);
+                // Link the new virtual guest
+                await api.patch('virtual_guests', `id=eq.${encodeURIComponent(virtualId)}`, { matched_guest_id: currentRealGuest.id });
                 // Sync properties to virtual
-                syncToVirtual(virtualId, currentRealGuest);
-                render();
+                await syncToVirtual(virtualId, currentRealGuest);
+                await fetchAll(); render();
                 document.getElementById('link-modal').classList.remove('active');
             });
         });
@@ -330,14 +318,13 @@
         document.getElementById('link-modal').classList.remove('active');
     });
 
-    document.getElementById('link-unlink').addEventListener('click', () => {
+    document.getElementById('link-unlink').addEventListener('click', async () => {
         if (currentRealGuest) {
-            const matches = getMatches();
-            for (const [vid, rid] of Object.entries(matches)) {
-                if (String(rid) === String(currentRealGuest.id)) delete matches[vid];
+            const vid = getMatchedVirtualId(currentRealGuest.id);
+            if (vid) {
+                await api.patch('virtual_guests', `id=eq.${encodeURIComponent(vid)}`, { matched_guest_id: null });
             }
-            saveMatches(matches);
-            render();
+            await fetchAll(); render();
         }
         document.getElementById('link-modal').classList.remove('active');
     });
@@ -359,6 +346,6 @@
 
     function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-    async function init() { await fetchGuests(); render(); }
+    async function init() { await fetchAll(); render(); }
     init();
 })();

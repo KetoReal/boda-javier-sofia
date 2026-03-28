@@ -3,6 +3,7 @@
    Uses VIRTUAL guests for planning.
    Shows green/gray based on match status.
    Shows group/familia info in tooltips.
+   ALL DATA IN SUPABASE (no localStorage)
    ══════════════════════════════════════════════ */
 
 (function () {
@@ -10,54 +11,105 @@
 
     const SEATS_PER_TABLE = 8;
 
-    let guests = [];      // virtual guests
-    let matches = {};     // virtualId -> realGuestId
-    let tables = [];
-    let assignments = {}; // { guestId: tableId }
-    let vGroups = [];
-    let vGuestGroups = {};
-    let vGuestFamilias = {};
+    const SUPABASE_URL = 'https://lpatzgviideumccecfew.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MTY2MDMsImV4cCI6MjA5MDA5MjYwM30.jWQrW6FqArq87w50YALA9CUxahyPzwHBQLd9kI7U4qY';
+    const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUxNjYwMywiZXhwIjoyMDkwMDkyNjAzfQ.-CM_Wku1-fWqtbz8flSb3MFabrxFnoED047cT81hgAs';
 
-    function loadData() {
-        guests = JSON.parse(localStorage.getItem('wedding_virtual_guests') || '[]');
-        matches = JSON.parse(localStorage.getItem('wedding_matches') || '{}');
-        tables = JSON.parse(localStorage.getItem('wedding_tables') || '[]');
-        assignments = JSON.parse(localStorage.getItem('wedding_assignments') || '{}');
-        vGroups = JSON.parse(localStorage.getItem('wedding_virtual_groups') || '[]');
-        vGuestGroups = JSON.parse(localStorage.getItem('wedding_vguest_groups') || '{}');
-        vGuestFamilias = JSON.parse(localStorage.getItem('wedding_vguest_familias') || '{}');
+    function authHeaders(prefer) {
+        const h = {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+            'Content-Type': 'application/json',
+        };
+        if (prefer) h['Prefer'] = prefer;
+        return h;
+    }
 
+    const api = {
+        async get(table, query = '') {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, { headers: authHeaders() });
+            return res.ok ? res.json() : [];
+        },
+        async upsert(table, data) {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+                method: 'POST',
+                headers: authHeaders('return=representation,resolution=merge-duplicates'),
+                body: JSON.stringify(Array.isArray(data) ? data : [data]),
+            });
+            return res.ok ? res.json() : [];
+        },
+        async del(table, match) {
+            await fetch(`${SUPABASE_URL}/rest/v1/${table}?${match}`, {
+                method: 'DELETE', headers: authHeaders(),
+            });
+        },
+    };
+
+    let guests = [];           // virtual guests
+    let tables = [];           // mesas
+    let assignments = {};      // { virtualGuestId: tableId }
+    let groups = [];           // guest groups
+
+    async function loadData() {
+        const [vGuests, mesasData, assignData, groupsData] = await Promise.all([
+            api.get('virtual_guests', 'order=created_at.asc'),
+            api.get('tables', 'order=created_at.asc'),
+            api.get('mesa_assignments', 'order=created_at.asc'),
+            api.get('guest_groups', 'order=created_at.asc'),
+        ]);
+
+        guests = vGuests;
+        tables = mesasData;
+        groups = groupsData;
+
+        // Build assignments map
+        assignments = {};
+        assignData.forEach(a => { assignments[a.virtual_guest_id] = a.table_id; });
+
+        // Auto-create tables if none exist
         if (!tables.length && guests.length > 0) {
             const numTables = Math.ceil(guests.length / SEATS_PER_TABLE);
+            const newTables = [];
             for (let i = 1; i <= numTables; i++) {
-                tables.push({ id: 't' + i, name: 'Mesa ' + i });
+                newTables.push({ id: Date.now() + i, nombre: 'Mesa ' + i });
             }
-            saveTables();
+            const created = await api.upsert('tables', newTables);
+            if (created.length) tables = created;
         }
 
         render();
     }
 
-    function saveTables() { localStorage.setItem('wedding_tables', JSON.stringify(tables)); }
-    function saveAssignments() { localStorage.setItem('wedding_assignments', JSON.stringify(assignments)); }
+    async function saveMesa(mesa) {
+        await api.upsert('tables', { id: mesa.id, nombre: mesa.nombre });
+    }
+
+    async function saveAssignment(guestId, tableId) {
+        assignments[guestId] = tableId;
+        await api.upsert('mesa_assignments', { virtual_guest_id: guestId, table_id: tableId });
+    }
+
+    async function removeAssignment(guestId) {
+        delete assignments[guestId];
+        await api.del('mesa_assignments', `virtual_guest_id=eq.${encodeURIComponent(guestId)}`);
+    }
 
     function getInitials(g) {
         return (((g.nombre || '')[0] || '') + ((g.apellidos || '')[0] || '')).toUpperCase();
     }
 
     function isConfirmed(g) {
-        return !!matches[g.id];
+        return !!g.matched_guest_id;
     }
 
-    function getGroupName(guestId) {
-        const gid = vGuestGroups[guestId];
-        if (!gid) return '';
-        const group = vGroups.find(g => g.id === gid);
+    function getGroupName(guest) {
+        if (!guest.group_id) return '';
+        const group = groups.find(g => g.id === guest.group_id);
         return group ? group.name : '';
     }
 
-    function getFamilia(guestId) {
-        return vGuestFamilias[guestId] || '';
+    function getFamilia(guest) {
+        return guest.familia || '';
     }
 
     // ── Chip ──
@@ -70,8 +122,8 @@
         chip.textContent = getInitials(guest);
 
         // Build tooltip with group/familia info
-        const groupName = getGroupName(guest.id);
-        const familia = getFamilia(guest.id);
+        const groupName = getGroupName(guest);
+        const familia = getFamilia(guest);
         let tooltipText = `${guest.nombre} ${guest.apellidos}`;
         if (groupName) tooltipText += ` | ${groupName}`;
         if (familia) tooltipText += ` | ${familia}`;
@@ -87,10 +139,9 @@
             const removeBtn = document.createElement('button');
             removeBtn.className = 'guest-chip__remove';
             removeBtn.textContent = '\u00d7';
-            removeBtn.addEventListener('click', (e) => {
+            removeBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                delete assignments[guest.id];
-                saveAssignments();
+                await removeAssignment(guest.id);
                 render();
             });
             chip.appendChild(removeBtn);
@@ -124,13 +175,12 @@
         const pool = document.getElementById('guest-pool');
         pool.addEventListener('dragover', (e) => { e.preventDefault(); pool.style.background = '#faf8f0'; });
         pool.addEventListener('dragleave', () => { pool.style.background = ''; });
-        pool.addEventListener('drop', (e) => {
+        pool.addEventListener('drop', async (e) => {
             e.preventDefault();
             pool.style.background = '';
             const guestId = e.dataTransfer.getData('text/plain');
             if (guestId && assignments[guestId]) {
-                delete assignments[guestId];
-                saveAssignments();
+                await removeAssignment(guestId);
                 render();
             }
         });
@@ -146,7 +196,7 @@
 
             slot.innerHTML = `
                 <div class="table-slot__header">
-                    <span class="table-slot__name" title="Doble click para renombrar">${esc(table.name)}</span>
+                    <span class="table-slot__name" title="Doble click para renombrar">${esc(table.nombre)}</span>
                     <span class="table-slot__count">${seatedGuests.length}/${SEATS_PER_TABLE} <span class="table-slot__confirmed">(${confirmedCount} conf.)</span></span>
                     <button class="table-slot__rename" title="Renombrar mesa">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -168,7 +218,7 @@
 
             slot.addEventListener('dragover', (e) => { e.preventDefault(); slot.classList.add('drag-over'); });
             slot.addEventListener('dragleave', (e) => { if (!slot.contains(e.relatedTarget)) slot.classList.remove('drag-over'); });
-            slot.addEventListener('drop', (e) => {
+            slot.addEventListener('drop', async (e) => {
                 e.preventDefault();
                 slot.classList.remove('drag-over');
                 const guestId = e.dataTransfer.getData('text/plain');
@@ -178,8 +228,7 @@
                     setTimeout(() => slot.style.animation = '', 300);
                     return;
                 }
-                assignments[guestId] = table.id;
-                saveAssignments();
+                await saveAssignment(guestId, table.id);
                 render();
             });
 
@@ -188,23 +237,23 @@
             function startRename() {
                 const input = document.createElement('input');
                 input.type = 'text';
-                input.value = table.name;
+                input.value = table.nombre;
                 input.className = 'table-slot__name-input';
                 nameEl.replaceWith(input);
                 input.focus();
                 input.select();
 
-                function finishRename() {
-                    const newName = input.value.trim() || table.name;
-                    table.name = newName;
-                    saveTables();
+                async function finishRename() {
+                    const newName = input.value.trim() || table.nombre;
+                    table.nombre = newName;
+                    await saveMesa(table);
                     render();
                 }
 
                 input.addEventListener('blur', finishRename);
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') input.blur();
-                    if (e.key === 'Escape') { input.value = table.name; input.blur(); }
+                    if (e.key === 'Escape') { input.value = table.nombre; input.blur(); }
                 });
             }
 
@@ -212,20 +261,28 @@
             nameEl.addEventListener('dblclick', startRename);
 
             // Delete
-            slot.querySelector('.table-slot__delete').addEventListener('click', () => {
-                seatedGuests.forEach(g => delete assignments[g.id]);
+            slot.querySelector('.table-slot__delete').addEventListener('click', async () => {
+                // Remove assignments for guests at this table
+                const deletes = seatedGuests.map(g => removeAssignment(g.id));
+                await Promise.all(deletes);
+                await api.del('tables', `id=eq.${table.id}`);
                 tables = tables.filter(t => t.id !== table.id);
-                saveTables(); saveAssignments(); render();
+                render();
             });
 
             tablesArea.appendChild(slot);
         });
+
+        if (window.updateBudgetBar) window.updateBudgetBar();
     }
 
     // ── Add table ──
-    document.getElementById('btn-add-table').addEventListener('click', () => {
-        tables.push({ id: 't' + Date.now(), name: 'Mesa ' + (tables.length + 1) });
-        saveTables(); render();
+    document.getElementById('btn-add-table').addEventListener('click', async () => {
+        const mesa = { id: Date.now(), nombre: 'Mesa ' + (tables.length + 1) };
+        const created = await api.upsert('tables', mesa);
+        if (created.length) tables.push(created[0]);
+        else tables.push(mesa);
+        render();
     });
 
     // ── Generate fake guests -> creates virtual guests ──
@@ -241,7 +298,7 @@
         document.getElementById('generate-modal').classList.remove('active');
     });
 
-    document.getElementById('generate-confirm').addEventListener('click', () => {
+    document.getElementById('generate-confirm').addEventListener('click', async () => {
         const count = parseInt(document.getElementById('generate-count').value) || 70;
 
         const newGuests = [];
@@ -255,22 +312,33 @@
                 menu: null,
                 autobus: null,
                 alergias: null,
+                matched_guest_id: null,
+                group_id: null,
+                familia: null,
             });
         }
 
-        localStorage.setItem('wedding_virtual_guests', JSON.stringify(newGuests));
-        assignments = {};
-        saveAssignments();
+        // Clear old assignments and virtual guests
+        await api.del('mesa_assignments', 'virtual_guest_id=neq.IMPOSSIBLE');
+        await api.del('virtual_guests', 'id=neq.IMPOSSIBLE');
 
+        // Insert new virtual guests
+        await api.upsert('virtual_guests', newGuests);
+        guests = newGuests;
+        assignments = {};
+
+        // Create tables
         const numTables = Math.ceil(count / SEATS_PER_TABLE);
-        tables = [];
+        await api.del('tables', 'id=neq.-1');
+        const newTables = [];
         for (let i = 1; i <= numTables; i++) {
-            tables.push({ id: 't' + Date.now() + i, name: 'Mesa ' + i });
+            newTables.push({ id: Date.now() + i, nombre: 'Mesa ' + i });
         }
-        saveTables();
+        const created = await api.upsert('tables', newTables);
+        tables = created.length ? created : newTables;
 
         document.getElementById('generate-modal').classList.remove('active');
-        loadData();
+        render();
         if (window.updateBudgetBar) window.updateBudgetBar();
     });
 

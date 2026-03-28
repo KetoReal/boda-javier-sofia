@@ -196,44 +196,102 @@
                     <div class="rsvp__steps">
                         <div class="rsvp__step rsvp__step--active" data-step="1">
                             <div class="rsvp__step-circle">1</div>
-                            <span class="rsvp__step-label">Datos</span>
+                            <span class="rsvp__step-label">Grupo</span>
                         </div>
                         <div class="rsvp__step" data-step="2">
                             <div class="rsvp__step-circle">2</div>
-                            <span class="rsvp__step-label">Bus</span>
+                            <span class="rsvp__step-label">Nombres</span>
                         </div>
                         <div class="rsvp__step" data-step="3">
                             <div class="rsvp__step-circle">3</div>
-                            <span class="rsvp__step-label">Menú</span>
+                            <span class="rsvp__step-label">Bus</span>
                         </div>
                         <div class="rsvp__step" data-step="4">
                             <div class="rsvp__step-circle">4</div>
+                            <span class="rsvp__step-label">Comida</span>
+                        </div>
+                        <div class="rsvp__step" data-step="5">
+                            <div class="rsvp__step-circle">5</div>
                             <span class="rsvp__step-label">Detalle</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Step 1: Personal Info -->
+                <!-- Step 1: Who + How many -->
                 <div class="rsvp__panel rsvp__panel--active" id="rsvp-step-1">
-                    <h3 class="rsvp__panel-title">¿Cómo te llamas?</h3>
+                    <h3 class="rsvp__panel-title">¡Hola! ¿Quién confirma?</h3>
+                    <p class="rsvp__panel-hint">Dinos tu nombre y cuántos venís</p>
                     <div class="rsvp__form-group">
-                        <label class="rsvp__label" for="guest-name">Nombre</label>
-                        <input type="text" id="guest-name" class="rsvp__input" placeholder="Tu nombre" required autocomplete="given-name">
+                        <label class="rsvp__label" for="guest-name">Tu nombre</label>
+                        <input type="text" id="guest-name" class="rsvp__input" placeholder="Ej: María" required autocomplete="given-name">
                     </div>
                     <div class="rsvp__form-group">
-                        <label class="rsvp__label" for="guest-surname">Apellidos</label>
-                        <input type="text" id="guest-surname" class="rsvp__input" placeholder="Tus apellidos" required autocomplete="family-name">
+                        <label class="rsvp__label" for="guest-surname">Tus apellidos</label>
+                        <input type="text" id="guest-surname" class="rsvp__input" placeholder="Ej: García López" required autocomplete="family-name">
                     </div>
+
+                    <div class="rsvp__counters">
+                        <p class="rsvp__counters-title">¿Cuántos venís en tu grupo?</p>
+                        <div class="rsvp__counter-row">
+                            <div class="rsvp__counter-info">
+                                <span class="rsvp__counter-label">Adultos</span>
+                                <span class="rsvp__counter-detail">Incluido tú</span>
+                            </div>
+                            <div class="rsvp__counter-controls">
+                                <button type="button" class="rsvp__counter-btn" id="adults-minus" aria-label="Menos adultos">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
+                                </button>
+                                <span class="rsvp__counter-value" id="adults-count">1</span>
+                                <button type="button" class="rsvp__counter-btn" id="adults-plus" aria-label="Más adultos">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="rsvp__counter-row">
+                            <div class="rsvp__counter-info">
+                                <span class="rsvp__counter-label">Niños</span>
+                                <span class="rsvp__counter-detail">Menores de 12 años</span>
+                            </div>
+                            <div class="rsvp__counter-controls">
+                                <button type="button" class="rsvp__counter-btn" id="children-minus" aria-label="Menos niños">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
+                                </button>
+                                <span class="rsvp__counter-value" id="children-count">0</span>
+                                <button type="button" class="rsvp__counter-btn" id="children-plus" aria-label="Más niños">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="rsvp__counters-summary" id="group-summary">1 persona en total</p>
+                    </div>
+
                     <button class="btn btn--primary btn--full" id="rsvp-next-1">
                         Siguiente
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </button>
                 </div>
 
-                <!-- Step 2: Transport -->
+                <!-- Step 2: Names for each person -->
                 <div class="rsvp__panel" id="rsvp-step-2">
-                    <h3 class="rsvp__panel-title">¿Vas a utilizar el autobús?</h3>
-                    <p class="rsvp__panel-hint">Selecciona tu opción de transporte</p>
+                    <h3 class="rsvp__panel-title">Ponle nombre a cada uno</h3>
+                    <p class="rsvp__panel-hint">Necesitamos el nombre y apellidos de todos</p>
+                    <div id="family-members"></div>
+                    <div class="rsvp__nav">
+                        <button class="btn btn--ghost" id="rsvp-back-2">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            Atrás
+                        </button>
+                        <button class="btn btn--primary" id="rsvp-next-2">
+                            Siguiente
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Transport -->
+                <div class="rsvp__panel" id="rsvp-step-3">
+                    <h3 class="rsvp__panel-title">¿Cómo vais a llegar?</h3>
+                    <p class="rsvp__panel-hint" id="transport-hint">Transporte para todo el grupo</p>
                     <div class="rsvp__options rsvp__options--transport">
                         <label class="rsvp__option-card">
                             <input type="radio" name="transport" value="plaza-castilla" class="rsvp__option-input">
@@ -247,7 +305,7 @@
                                         <line x1="8" y1="36" x2="56" y2="36"/>
                                     </svg>
                                 </div>
-                                <span class="rsvp__option-title">Sí, desde Plaza de Castilla</span>
+                                <span class="rsvp__option-title">Sí, en autobús desde Plaza de Castilla</span>
                                 <span class="rsvp__option-detail">Salida 15:30h · Madrid</span>
                             </div>
                             <div class="rsvp__option-check">
@@ -266,7 +324,7 @@
                                         <line x1="8" y1="36" x2="56" y2="36"/>
                                     </svg>
                                 </div>
-                                <span class="rsvp__option-title">Sí, desde Alcobendas</span>
+                                <span class="rsvp__option-title">Sí, en autobús desde Alcobendas</span>
                                 <span class="rsvp__option-detail">Salida 16:30h · Av. España</span>
                             </div>
                             <div class="rsvp__option-check">
@@ -285,102 +343,13 @@
                                         <rect x="34" y="40" width="8" height="6" rx="1"/>
                                     </svg>
                                 </div>
-                                <span class="rsvp__option-title">No, iré por mi cuenta</span>
+                                <span class="rsvp__option-title">No, iremos por nuestra cuenta</span>
                                 <span class="rsvp__option-detail">Vehículo propio</span>
                             </div>
                             <div class="rsvp__option-check">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
                             </div>
                         </label>
-                    </div>
-                    <div class="rsvp__nav">
-                        <button class="btn btn--ghost" id="rsvp-back-2">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                            Atrás
-                        </button>
-                        <button class="btn btn--primary" id="rsvp-next-2" disabled>
-                            Siguiente
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Step 3: Menu -->
-                <div class="rsvp__panel" id="rsvp-step-3">
-                    <h3 class="rsvp__panel-title">¿Qué menú prefieres?</h3>
-                    <p class="rsvp__panel-hint">Elige tu opción favorita</p>
-                    <div class="rsvp__options rsvp__options--menu">
-                        <label class="rsvp__option-circle">
-                            <input type="radio" name="menu" value="carne" class="rsvp__option-input">
-                            <div class="rsvp__circle-visual">
-                                <div class="rsvp__circle-icon">
-                                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
-                                        <ellipse cx="32" cy="38" rx="24" ry="8"/>
-                                        <path d="M20 22 C20 16 28 10 32 10 C36 10 44 16 44 22 L44 34 C44 34 38 30 32 30 C26 30 20 34 20 34 Z"/>
-                                        <path d="M28 18 C30 16 34 16 36 18"/>
-                                    </svg>
-                                </div>
-                                <span class="rsvp__circle-label">Carne</span>
-                            </div>
-                            <div class="rsvp__option-check">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-                            </div>
-                        </label>
-                        <label class="rsvp__option-circle">
-                            <input type="radio" name="menu" value="pescado" class="rsvp__option-input">
-                            <div class="rsvp__circle-visual">
-                                <div class="rsvp__circle-icon">
-                                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M12 32 C20 20 44 18 52 32 C44 46 20 44 12 32Z"/>
-                                        <circle cx="44" cy="30" r="2" fill="currentColor"/>
-                                        <path d="M6 24 L12 32 L6 40"/>
-                                        <path d="M24 28 C28 24 34 24 38 28"/>
-                                        <path d="M24 36 C28 40 34 40 38 36"/>
-                                    </svg>
-                                </div>
-                                <span class="rsvp__circle-label">Pescado</span>
-                            </div>
-                            <div class="rsvp__option-check">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-                            </div>
-                        </label>
-                        <label class="rsvp__option-circle">
-                            <input type="radio" name="menu" value="vegetariano" class="rsvp__option-input">
-                            <div class="rsvp__circle-visual">
-                                <div class="rsvp__circle-icon">
-                                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M32 52 L32 30"/>
-                                        <path d="M32 30 C24 24 20 14 28 8 C32 12 36 12 40 8 C48 14 44 24 32 30Z"/>
-                                        <path d="M26 44 C22 42 18 38 20 32"/>
-                                        <path d="M38 44 C42 42 46 38 44 32"/>
-                                    </svg>
-                                </div>
-                                <span class="rsvp__circle-label">Vegetariano</span>
-                            </div>
-                            <div class="rsvp__option-check">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-                            </div>
-                        </label>
-                        <label class="rsvp__option-circle">
-                            <input type="radio" name="menu" value="vegano" class="rsvp__option-input">
-                            <div class="rsvp__circle-visual">
-                                <div class="rsvp__circle-icon">
-                                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M16 48 C16 28 28 12 48 12 C48 32 36 48 16 48Z"/>
-                                        <path d="M16 48 C28 36 40 24 48 12"/>
-                                        <path d="M24 40 C28 32 34 28 38 22"/>
-                                    </svg>
-                                </div>
-                                <span class="rsvp__circle-label">Vegano</span>
-                            </div>
-                            <div class="rsvp__option-check">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-                            </div>
-                        </label>
-                    </div>
-                    <div class="rsvp__form-group rsvp__form-group--allergy">
-                        <label class="rsvp__label" for="guest-allergy">¿Alguna alergia o intolerancia?</label>
-                        <textarea id="guest-allergy" class="rsvp__input rsvp__textarea" placeholder="Escribe aquí si tienes alguna alergia o intolerancia alimentaria..." rows="3"></textarea>
                     </div>
                     <div class="rsvp__nav">
                         <button class="btn btn--ghost" id="rsvp-back-3">
@@ -394,8 +363,25 @@
                     </div>
                 </div>
 
-                <!-- Step 4: Un detalle (IBAN) -->
+                <!-- Step 4: Menu per person -->
                 <div class="rsvp__panel" id="rsvp-step-4">
+                    <h3 class="rsvp__panel-title">¿Qué va a comer cada uno?</h3>
+                    <p class="rsvp__panel-hint">Elige el menú de cada persona</p>
+                    <div id="family-menus"></div>
+                    <div class="rsvp__nav">
+                        <button class="btn btn--ghost" id="rsvp-back-4">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            Atrás
+                        </button>
+                        <button class="btn btn--primary" id="rsvp-next-4" disabled>
+                            Siguiente
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 5: IBAN -->
+                <div class="rsvp__panel" id="rsvp-step-5">
                     <div class="rsvp__regalo">
                         <p class="rsvp__regalo-text">
                             Vuestra compañía es el mejor regalo.
@@ -416,12 +402,12 @@
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                             Enviar por WhatsApp
                         </button>
-                        <button class="btn btn--outline-gold" id="rsvp-next-4">
+                        <button class="btn btn--outline-gold" id="rsvp-next-5">
                             Finalizar
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
                         </button>
                     </div>
-                    <button class="rsvp__back-link" id="rsvp-back-4">
+                    <button class="rsvp__back-link" id="rsvp-back-5">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                         Volver al paso anterior
                     </button>
@@ -440,7 +426,7 @@
                         <h3 class="rsvp__confirmation-title">
                             ¡<span id="confirm-name">Invitado</span>, muchas gracias!
                         </h3>
-                        <p class="rsvp__confirmation-text">
+                        <p class="rsvp__confirmation-text" id="confirm-text">
                             Tu asistencia ha sido confirmada. Nos lo vamos a pasar genial.
                         </p>
                         <p class="rsvp__confirmation-hint">
