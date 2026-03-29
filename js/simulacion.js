@@ -99,8 +99,7 @@
 
     // ── Save helpers ──
     async function saveVirtualGuest(vg) {
-        const row = {
-            id: vg.id,
+        const data = {
             nombre: vg.nombre,
             apellidos: vg.apellidos || '',
             menu: vg.menu || null,
@@ -109,10 +108,10 @@
             matched_guest_id: vg.matched_guest_id || null,
             group_id: vg.group_id || null,
             familia: vg.familia || null,
-            is_child: vg.is_child || false,
-            exclude_from_budget: vg.exclude_from_budget || false,
+            is_child: !!vg.is_child,
+            exclude_from_budget: !!vg.exclude_from_budget,
         };
-        await api.upsert('virtual_guests', row);
+        await api.patch('virtual_guests', `id=eq.${encodeURIComponent(vg.id)}`, data);
     }
 
     async function deleteVirtualGuest(id) {
