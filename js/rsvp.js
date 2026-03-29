@@ -296,13 +296,16 @@
     document.getElementById('rsvp-next-4').addEventListener('click', async () => {
         // Read menu + allergy data
         members.forEach((m, i) => {
-            const checked = document.querySelector(`input[name="menu_${i}"]:checked`);
-            m.menu = checked ? checked.value : null;
+            if (!m.isChild) {
+                const checked = document.querySelector(`input[name="menu_${i}"]:checked`);
+                m.menu = checked ? checked.value : null;
+            }
+            // Children keep menu = 'infantil' set in buildStep4
             const allergyEl = document.querySelector(`.allergy-input[data-idx="${i}"]`);
             m.alergias = allergyEl ? allergyEl.value.trim() || null : null;
         });
 
-        // Check all menus selected
+        // Check all adults have selected menu (children have 'infantil')
         if (members.some(m => !m.menu)) return;
 
         const btn = document.getElementById('rsvp-next-4');
