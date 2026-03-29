@@ -223,6 +223,9 @@
         if (vg.alergias) {
             badges += `<span class="inv-guest__badge inv-guest__badge--allergy">${esc(vg.alergias)}</span>`;
         }
+        if (vg.exclude_from_budget) {
+            badges += '<span class="inv-guest__badge" style="background:#fef0f0;color:#e74c3c;font-weight:600">Excluido PRE</span>';
+        }
         return badges;
     }
 
