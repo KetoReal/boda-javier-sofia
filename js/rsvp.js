@@ -233,8 +233,8 @@
             block.className = 'rsvp__menu-person';
 
             if (m.isChild) {
-                // Children: fixed kids menu, only allergy field
-                m.menu = 'infantil';
+                // Children: fixed kids menu (stored as null in DB, is_child=true identifies them)
+                m.menu = '__infantil__';
                 block.innerHTML = `
                     <div class="rsvp__menu-person-name">
                         <div class="rsvp__member-icon" style="background:var(--olive)">${i + 1}</div>
@@ -281,6 +281,9 @@
         container.querySelectorAll('.menu-radio').forEach(radio => {
             radio.addEventListener('change', checkAllMenusSelected);
         });
+
+        // Check immediately (e.g. all children = all menus preset)
+        checkAllMenusSelected();
     }
 
     function checkAllMenusSelected() {
@@ -305,8 +308,8 @@
             m.alergias = allergyEl ? allergyEl.value.trim() || null : null;
         });
 
-        // Check all adults have selected menu (children have 'infantil')
-        if (members.some(m => !m.menu)) return;
+        // Check all adults have selected menu (children have '__infantil__' placeholder)
+        if (members.some(m => !m.isChild && !m.menu)) return;
 
         const btn = document.getElementById('rsvp-next-4');
         btn.disabled = true;
@@ -314,12 +317,12 @@
 
         const transport = getSelectedRadio('transport');
 
-        // Build records
+        // Build records (children menu stored as null, identified by is_child)
         const records = members.map(m => ({
             nombre: m.nombre,
             apellidos: m.apellidos,
             autobus: transport,
-            menu: m.menu,
+            menu: m.isChild ? null : m.menu,
             alergias: m.alergias,
             family_group: familyGroup,
             is_child: m.isChild,

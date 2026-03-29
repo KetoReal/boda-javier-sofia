@@ -87,7 +87,7 @@
 
         emptyMsg.style.display = 'none';
         tbody.innerHTML = guests.map(g => {
-            const menuBadge = g.menu ? `<span class="badge badge--${g.menu}">${capitalize(g.menu)}</span>` : '-';
+            const menuBadge = g.menu ? `<span class="badge badge--${g.menu}">${capitalize(g.menu)}</span>` : (g.is_child ? '<span class="badge badge--infantil">Infantil</span>' : '-');
             const busBadge = g.autobus === 'no'
                 ? '<span class="badge badge--car">Propio</span>'
                 : `<span class="badge badge--bus">${g.autobus === 'plaza-castilla' ? 'P. Castilla' : 'Alcobendas'}</span>`;
