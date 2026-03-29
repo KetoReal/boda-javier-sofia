@@ -111,18 +111,11 @@
         data.is_child = vg.is_child === true;
         data.exclude_from_budget = vg.exclude_from_budget === true;
 
-        console.log('saveVirtualGuest PATCH:', vg.id, JSON.stringify(data));
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/virtual_guests?id=eq.${encodeURIComponent(vg.id)}`, {
+        await fetch(`${SUPABASE_URL}/rest/v1/virtual_guests?id=eq.${encodeURIComponent(vg.id)}`, {
             method: 'PATCH',
             headers: authHeaders('return=representation'),
             body: JSON.stringify(data),
         });
-        if (!res.ok) {
-            const err = await res.text();
-            console.error('saveVirtualGuest FAILED:', res.status, err);
-        } else {
-            console.log('saveVirtualGuest OK');
-        }
     }
 
     async function deleteVirtualGuest(id) {
@@ -712,18 +705,7 @@
         // Budget exclusion
         vg.exclude_from_budget = document.getElementById('ef-exclude-budget').checked;
 
-        try {
-            await saveVirtualGuest(vg);
-        } catch (err) {
-            console.error('Save failed, retrying with simple PATCH:', err);
-            // Fallback: patch individual fields
-            await api.patch('virtual_guests', `id=eq.${encodeURIComponent(vg.id)}`, {
-                nombre: vg.nombre,
-                apellidos: vg.apellidos || '',
-                is_child: !!vg.is_child,
-                exclude_from_budget: !!vg.exclude_from_budget,
-            });
-        }
+        await saveVirtualGuest(vg);
 
         render();
         closeEditModal();

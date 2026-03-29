@@ -393,6 +393,14 @@
                     { name: 'Assign guest to group' },
                     { name: 'Set familia on both' },
                     { name: 'Exclude from budget' },
+                    { name: 'Full edit — nombre' },
+                    { name: 'Full edit — menu' },
+                    { name: 'Full edit — is_child' },
+                    { name: 'Full edit — exclude_from_budget' },
+                    { name: 'Full edit — familia' },
+                    { name: 'Full edit — alergias' },
+                    { name: 'Read-back exclude_from_budget persisted' },
+                    { name: 'Read-back is_child persisted' },
                     { name: 'Similarity exact match = 1.0' },
                     { name: 'Manual match virtual to real' },
                     { name: 'Delete virtual guest' },
@@ -573,14 +581,25 @@
             await timedAssert(async () => { const r = await api('PATCH', 'virtual_guests', `id=eq.${vg1Id}`, { group_id: TEST_GROUP_ID }); return r.data && r.data[0]?.group_id === TEST_GROUP_ID; }, 'sim', 2);
             await timedAssert(async () => { await api('PATCH', 'virtual_guests', `id=eq.${vg1Id}`, { familia: 'Familia Test' }); const r = await api('PATCH', 'virtual_guests', `id=eq.${vg2Id}`, { familia: 'Familia Test' }); return r.data && r.data[0]?.familia === 'Familia Test'; }, 'sim', 3);
             await timedAssert(async () => { const r = await api('PATCH', 'virtual_guests', `id=eq.${vg1Id}`, { exclude_from_budget: true }); return r.data && r.data[0]?.exclude_from_budget === true; }, 'sim', 4);
+            // Full edit (simulates edit modal)
+            await timedAssert(async () => { const r = await api('PATCH', 'virtual_guests', `id=eq.${vg1Id}`, { nombre:'EditadoNombre',apellidos:'EditadoApellidos',menu:'pescado',autobus:'alcobendas',alergias:'test alergia',group_id:TEST_GROUP_ID,familia:'Familia Editada',is_child:true,exclude_from_budget:true }); return r.data && r.data[0]?.nombre === 'EditadoNombre'; }, 'sim', 5);
+            await timedAssert(async () => { const r = await api('GET', 'virtual_guests', `id=eq.${vg1Id}`); return r.data && r.data[0]?.menu === 'pescado'; }, 'sim', 6);
+            await timedAssert(async () => { const r = await api('GET', 'virtual_guests', `id=eq.${vg1Id}`); return r.data && r.data[0]?.is_child === true; }, 'sim', 7);
+            await timedAssert(async () => { const r = await api('GET', 'virtual_guests', `id=eq.${vg1Id}`); return r.data && r.data[0]?.exclude_from_budget === true; }, 'sim', 8);
+            await timedAssert(async () => { const r = await api('GET', 'virtual_guests', `id=eq.${vg1Id}`); return r.data && r.data[0]?.familia === 'Familia Editada'; }, 'sim', 9);
+            await timedAssert(async () => { const r = await api('GET', 'virtual_guests', `id=eq.${vg1Id}`); return r.data && r.data[0]?.alergias === 'test alergia'; }, 'sim', 10);
+            await timedAssert(async () => { const r = await api('GET', 'virtual_guests', `id=eq.${vg1Id}`); return r.data && r.data[0]?.exclude_from_budget === true; }, 'sim', 11);
+            await timedAssert(async () => { const r = await api('GET', 'virtual_guests', `id=eq.${vg1Id}`); return r.data && r.data[0]?.is_child === true; }, 'sim', 12);
+            // Revert
+            await api('PATCH', 'virtual_guests', `id=eq.${vg1Id}`, { nombre:'TestVirtual',apellidos:'Uno',menu:null,autobus:null,alergias:null,is_child:false,exclude_from_budget:false,familia:'Familia Test' });
             await timedAssert(async () => {
                 function normalize(s) { return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim(); }
                 function similarity(a,b) { const na=normalize(a),nb=normalize(b); if(na===nb)return 1; if(na.includes(nb)||nb.includes(na))return 0.8; const wa=na.split(' '),wb=nb.split(' '); const c=wa.filter(w=>wb.includes(w)).length; return Math.max(wa.length,wb.length)>0?c/Math.max(wa.length,wb.length):0; }
                 return similarity('TestVirtual Uno', 'TestVirtual Uno') === 1;
-            }, 'sim', 5);
-            await timedAssert(async () => { testRealId = familyGuests[0].id; const r = await api('PATCH', 'virtual_guests', `id=eq.${vg1Id}`, { matched_guest_id: testRealId }); return r.data && r.data[0]?.matched_guest_id === testRealId; }, 'sim', 6);
-            await timedAssert(async () => { const r = await fetch(`${BASE}/rest/v1/virtual_guests?id=eq.${vg2Id}`, { method: 'DELETE', headers: svcH() }); return r.ok; }, 'sim', 7);
-            setSectionStatus('sim', 8 - (failedTests - prevFail3), 8);
+            }, 'sim', 13);
+            await timedAssert(async () => { testRealId = familyGuests[0].id; const r = await api('PATCH', 'virtual_guests', `id=eq.${vg1Id}`, { matched_guest_id: testRealId }); return r.data && r.data[0]?.matched_guest_id === testRealId; }, 'sim', 14);
+            await timedAssert(async () => { const r = await fetch(`${BASE}/rest/v1/virtual_guests?id=eq.${vg2Id}`, { method: 'DELETE', headers: svcH() }); return r.ok; }, 'sim', 15);
+            setSectionStatus('sim', 16 - (failedTests - prevFail3), 16);
 
             // E. Mesas
             const prevFail4 = failedTests;

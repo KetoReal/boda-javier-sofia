@@ -190,6 +190,33 @@ async function run() {
     const exclRes = await patch('virtual_guests', `id=eq.${vg1Id}`, { exclude_from_budget: true });
     assert(exclRes.data && exclRes.data[0]?.exclude_from_budget === true, 'Exclude from budget');
 
+    // 19b. Full edit (simulates edit modal save)
+    const fullEdit = await patch('virtual_guests', `id=eq.${vg1Id}`, {
+        nombre: 'EditadoNombre',
+        apellidos: 'EditadoApellidos',
+        menu: 'pescado',
+        autobus: 'alcobendas',
+        alergias: 'test alergia',
+        group_id: TEST_GROUP_ID,
+        familia: 'Familia Editada',
+        is_child: true,
+        exclude_from_budget: true,
+    });
+    assert(fullEdit.data && fullEdit.data[0]?.nombre === 'EditadoNombre', 'Full edit — nombre');
+    assert(fullEdit.data && fullEdit.data[0]?.menu === 'pescado', 'Full edit — menu');
+    assert(fullEdit.data && fullEdit.data[0]?.is_child === true, 'Full edit — is_child');
+    assert(fullEdit.data && fullEdit.data[0]?.exclude_from_budget === true, 'Full edit — exclude_from_budget');
+    assert(fullEdit.data && fullEdit.data[0]?.familia === 'Familia Editada', 'Full edit — familia');
+    assert(fullEdit.data && fullEdit.data[0]?.alergias === 'test alergia', 'Full edit — alergias');
+
+    // 19c. Verify read-back after full edit
+    const readBack2 = await get('virtual_guests', `id=eq.${vg1Id}`);
+    assert(readBack2.data && readBack2.data[0]?.exclude_from_budget === true, 'Read-back exclude_from_budget persisted');
+    assert(readBack2.data && readBack2.data[0]?.is_child === true, 'Read-back is_child persisted');
+
+    // 19d. Revert exclude + is_child
+    await patch('virtual_guests', `id=eq.${vg1Id}`, { exclude_from_budget: false, is_child: false, nombre: 'TestVirtual', apellidos: 'Uno', menu: null, autobus: null, alergias: null, familia: 'Familia Test' });
+
     // 20. Similarity check (JS logic)
     function normalize(s) {
         return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
