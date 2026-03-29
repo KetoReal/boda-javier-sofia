@@ -49,7 +49,7 @@
 
     async function update() {
         try {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/virtual_guests?select=id,matched_guest_id`, {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/virtual_guests?select=id,matched_guest_id,exclude_from_budget`, {
                 headers: {
                     'apikey': SUPABASE_ANON_KEY,
                     'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
@@ -57,8 +57,9 @@
             });
             const virtuals = res.ok ? await res.json() : [];
 
-            const totalVirtual = virtuals.length;
-            const matchedCount = virtuals.filter(v => v.matched_guest_id).length;
+            const budgetGuests = virtuals.filter(v => !v.exclude_from_budget);
+            const totalVirtual = budgetGuests.length;
+            const matchedCount = budgetGuests.filter(v => v.matched_guest_id).length;
 
             const prevCount = document.getElementById('bb-prev-count');
             const prevCost = document.getElementById('bb-prev-cost');
