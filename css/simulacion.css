@@ -459,7 +459,9 @@
     transition: color 0.2s;
 }
 
-.inv-group__btn:hover { color: #e74c3c; }
+.inv-group__btn--up:hover,
+.inv-group__btn--down:hover { color: #C9A96E; }
+.inv-group__btn--delete:hover { color: #e74c3c; }
 
 .inv-group__list {
     display: flex;

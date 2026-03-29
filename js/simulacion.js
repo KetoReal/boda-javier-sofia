@@ -54,13 +54,46 @@
     let groups = [];
     let selected = new Set();
 
+    // ── Group order (localStorage) ──
+    function getGroupOrder() {
+        try { return JSON.parse(localStorage.getItem('boda_group_order') || '[]'); } catch (_) { return []; }
+    }
+
+    function saveGroupOrder() {
+        localStorage.setItem('boda_group_order', JSON.stringify(groups.map(g => g.id)));
+    }
+
+    function applyGroupOrder() {
+        const order = getGroupOrder();
+        if (!order.length) return;
+        groups.sort((a, b) => {
+            const ai = order.indexOf(a.id);
+            const bi = order.indexOf(b.id);
+            if (ai === -1 && bi === -1) return 0;
+            if (ai === -1) return 1;
+            if (bi === -1) return -1;
+            return ai - bi;
+        });
+    }
+
+    function moveGroup(groupId, direction) {
+        const idx = groups.findIndex(g => g.id === groupId);
+        if (idx === -1) return;
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= groups.length) return;
+        [groups[idx], groups[newIdx]] = [groups[newIdx], groups[idx]];
+        saveGroupOrder();
+        render();
+    }
+
     // ── Load all data from Supabase ──
     async function loadAll() {
         [realGuests, virtualGuests, groups] = await Promise.all([
             api.get('guests', 'order=created_at.desc'),
-            api.get('virtual_guests', 'order=created_at.asc'),
+            api.get('virtual_guests', 'select=*&order=created_at.asc'),
             api.get('guest_groups', 'order=created_at.asc'),
         ]);
+        applyGroupOrder();
         render();
     }
 
@@ -76,6 +109,7 @@
             matched_guest_id: vg.matched_guest_id || null,
             group_id: vg.group_id || null,
             familia: vg.familia || null,
+            is_child: vg.is_child || false,
         };
         await api.upsert('virtual_guests', row);
     }
@@ -159,6 +193,7 @@
         if (rg.menu) vg.menu = rg.menu;
         if (rg.autobus) vg.autobus = rg.autobus;
         if (rg.alergias) vg.alergias = rg.alergias;
+        if (rg.is_child !== undefined) vg.is_child = rg.is_child;
     }
 
     // ── Get familia members for drag ──
@@ -172,6 +207,9 @@
     // ── Badge HTML helper ──
     function badgesHtml(vg) {
         let badges = '';
+        badges += vg.is_child
+            ? '<span class="inv-guest__badge inv-guest__badge--child">Nino/a</span>'
+            : '<span class="inv-guest__badge inv-guest__badge--adult">Adulto</span>';
         if (vg.menu) {
             const label = vg.menu.charAt(0).toUpperCase() + vg.menu.slice(1);
             badges += `<span class="inv-guest__badge inv-guest__badge--${vg.menu}">${label}</span>`;
@@ -224,6 +262,12 @@
                         <span class="inv-group__count">${groupVGuests.length}</span>
                     </div>
                     <div class="inv-group__actions">
+                        <button class="inv-group__btn inv-group__btn--up" title="Subir grupo">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+                        </button>
+                        <button class="inv-group__btn inv-group__btn--down" title="Bajar grupo">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
                         <button class="inv-group__btn inv-group__btn--delete" title="Eliminar grupo">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                         </button>
@@ -247,6 +291,9 @@
             if (groupVGuests.length === 0) {
                 list.innerHTML = '<div class="inv-empty">Arrastra invitados aqui</div>';
             }
+
+            section.querySelector('.inv-group__btn--up').addEventListener('click', () => moveGroup(group.id, -1));
+            section.querySelector('.inv-group__btn--down').addEventListener('click', () => moveGroup(group.id, 1));
 
             section.querySelector('.inv-group__btn--delete').addEventListener('click', async () => {
                 if (!confirm(`Eliminar el grupo "${group.name}"?`)) return;
@@ -402,12 +449,22 @@
             openMatchModal(vg);
         });
 
-        // Drag — moves familia block
+        // Drag — moves all selected if any are selected, otherwise moves familia block
         row.addEventListener('dragstart', (e) => {
-            const ids = getFamiliaMembers(vg.id);
+            const sid = String(vg.id);
+            let ids;
+            if (selected.size > 0 && selected.has(sid)) {
+                // Drag all selected items
+                ids = [...selected];
+            } else if (selected.size > 0) {
+                // Dragging an unselected item while others are selected: drag just this one
+                ids = getFamiliaMembers(vg.id);
+            } else {
+                // Nothing selected: drag familia block
+                ids = getFamiliaMembers(vg.id);
+            }
             e.dataTransfer.setData('application/json', JSON.stringify(ids));
             e.dataTransfer.effectAllowed = 'move';
-            row.classList.add('vguest--dragging');
             ids.forEach(id => {
                 const el = document.querySelector(`.vguest[data-vguest-id="${id}"]`);
                 if (el) el.classList.add('vguest--dragging');
@@ -592,6 +649,7 @@
         document.getElementById('ef-autobus').value = vg.autobus || '';
         document.getElementById('ef-alergias').value = vg.alergias || '';
         document.getElementById('ef-familia').value = vg.familia || '';
+        document.getElementById('ef-is-child').value = vg.is_child ? '1' : '0';
         document.getElementById('ef-confirmed').checked = !!vg.matched_guest_id;
         document.getElementById('edit-delete').style.display = 'inline-flex';
         populateGroupSelect(document.getElementById('ef-grupo'), vg.group_id || '');
@@ -625,6 +683,7 @@
         vg.menu = document.getElementById('ef-menu').value || null;
         vg.autobus = document.getElementById('ef-autobus').value || null;
         vg.alergias = document.getElementById('ef-alergias').value.trim() || null;
+        vg.is_child = document.getElementById('ef-is-child').value === '1';
 
         // Group
         vg.group_id = document.getElementById('ef-grupo').value || null;
