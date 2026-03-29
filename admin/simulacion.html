@@ -199,9 +199,18 @@
                         </label>
                     </div>
                 </div>
-                <div class="modal__field">
-                    <label class="modal__label">Alergias / Notas</label>
-                    <input type="text" class="modal__input" id="ef-alergias" placeholder="Opcional">
+                <div class="modal__row">
+                    <div class="modal__field">
+                        <label class="modal__label">Alergias / Notas</label>
+                        <input type="text" class="modal__input" id="ef-alergias" placeholder="Opcional">
+                    </div>
+                    <div class="modal__field">
+                        <label class="modal__label">&nbsp;</label>
+                        <label class="modal__label" style="margin-top:10px">
+                            <input type="checkbox" id="ef-exclude-budget" style="accent-color:#e74c3c;margin-right:6px">
+                            Excluir del presupuesto
+                        </label>
+                    </div>
                 </div>
                 <div class="modal__btns">
                     <button type="button" class="btn-action btn-action--outline" id="edit-cancel">Cancelar</button>
@@ -261,6 +270,7 @@
     <div class="sel-toolbar" id="sel-toolbar">
         <span class="sel-toolbar__text"><strong id="sel-count">0</strong> seleccionados</span>
         <button class="btn-action btn-action--outline btn-action--sm" id="sel-move">Mover a grupo</button>
+        <button class="btn-action btn-action--outline btn-action--sm" id="sel-link-familia" style="border-color:#7D8C6C;color:#7D8C6C">Vincular familia</button>
         <button class="btn-action btn-action--danger btn-action--sm" id="sel-delete">Eliminar</button>
         <button class="btn-action btn-action--outline btn-action--sm" id="sel-clear">Cancelar</button>
     </div>

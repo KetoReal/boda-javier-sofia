@@ -170,7 +170,48 @@
         document.getElementById('unassigned-count').textContent = unassigned.length;
 
         poolList.innerHTML = '';
-        unassigned.forEach(g => poolList.appendChild(createChip(g, false)));
+
+        // Group unassigned by group_id
+        const byGroup = {};
+        const noGroup = [];
+        unassigned.forEach(g => {
+            if (g.group_id) {
+                if (!byGroup[g.group_id]) byGroup[g.group_id] = [];
+                byGroup[g.group_id].push(g);
+            } else {
+                noGroup.push(g);
+            }
+        });
+
+        // Render grouped sections
+        groups.forEach(group => {
+            const members = byGroup[group.id];
+            if (!members || !members.length) return;
+            const section = document.createElement('div');
+            section.className = 'pool-group';
+            section.innerHTML = `<div class="pool-group__label" style="border-left-color:${group.color || '#C9A96E'}">${esc(group.name)} <span style="color:#bbb;font-weight:400">(${members.length})</span></div>`;
+            const chips = document.createElement('div');
+            chips.className = 'pool-group__chips';
+            members.forEach(g => chips.appendChild(createChip(g, false)));
+            section.appendChild(chips);
+            poolList.appendChild(section);
+        });
+
+        // Render ungrouped
+        if (noGroup.length) {
+            if (Object.keys(byGroup).length > 0) {
+                const section = document.createElement('div');
+                section.className = 'pool-group';
+                section.innerHTML = `<div class="pool-group__label" style="border-left-color:#ccc">Sin grupo <span style="color:#bbb;font-weight:400">(${noGroup.length})</span></div>`;
+                const chips = document.createElement('div');
+                chips.className = 'pool-group__chips';
+                noGroup.forEach(g => chips.appendChild(createChip(g, false)));
+                section.appendChild(chips);
+                poolList.appendChild(section);
+            } else {
+                noGroup.forEach(g => poolList.appendChild(createChip(g, false)));
+            }
+        }
 
         const pool = document.getElementById('guest-pool');
         pool.addEventListener('dragover', (e) => { e.preventDefault(); pool.style.background = '#faf8f0'; });
@@ -185,92 +226,182 @@
             }
         });
 
+        // ── 2D Table rendering ──
         tablesArea.innerHTML = '';
-        tables.forEach(table => {
-            const slot = document.createElement('div');
-            slot.className = 'table-slot';
-            slot.dataset.tableId = table.id;
+        const COLS = 3;
+        const TABLE_W = 220;
+        const TABLE_H = 220;
+        const GAP = 40;
 
+        // Load saved positions or auto-layout in grid
+        let positions = {};
+        try { positions = JSON.parse(localStorage.getItem('boda_table_positions') || '{}'); } catch (_) {}
+
+        // Ensure canvas is big enough
+        const rows = Math.ceil(tables.length / COLS);
+        tablesArea.style.minHeight = Math.max(600, rows * (TABLE_H + GAP) + GAP) + 'px';
+        tablesArea.style.minWidth = Math.max(800, COLS * (TABLE_W + GAP) + GAP) + 'px';
+
+        tables.forEach((table, idx) => {
             const seatedGuests = guests.filter(g => assignments[g.id] === table.id);
             const confirmedCount = seatedGuests.filter(g => isConfirmed(g)).length;
 
-            slot.innerHTML = `
-                <div class="table-slot__header">
-                    <span class="table-slot__name" title="Doble click para renombrar">${esc(table.nombre)}</span>
-                    <span class="table-slot__count">${seatedGuests.length}/${SEATS_PER_TABLE} <span class="table-slot__confirmed">(${confirmedCount} conf.)</span></span>
-                    <button class="table-slot__rename" title="Renombrar mesa">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    </button>
-                    <button class="table-slot__delete" title="Eliminar mesa">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                    </button>
+            // Position: saved or auto-grid
+            const defaultX = GAP + (idx % COLS) * (TABLE_W + GAP);
+            const defaultY = GAP + Math.floor(idx / COLS) * (TABLE_H + GAP);
+            const pos = positions[table.id] || { x: defaultX, y: defaultY };
+
+            const el = document.createElement('div');
+            el.className = 'table-2d';
+            el.dataset.tableId = table.id;
+            el.style.left = pos.x + 'px';
+            el.style.top = pos.y + 'px';
+            el.style.width = TABLE_W + 'px';
+            el.style.height = TABLE_H + 'px';
+
+            // Circle container
+            const circle = document.createElement('div');
+            circle.className = 'table-2d__circle';
+
+            // Center (table label)
+            const center = document.createElement('div');
+            center.className = 'table-2d__center';
+            center.innerHTML = `
+                <span class="table-2d__name">${esc(table.nombre)}</span>
+                <span class="table-2d__count">${seatedGuests.length}/${SEATS_PER_TABLE}</span>
+                <div class="table-2d__actions">
+                    <button class="table-2d__btn table-2d__btn--rename" title="Renombrar">&#9998;</button>
+                    <button class="table-2d__btn table-2d__btn--delete" title="Eliminar">&#128465;</button>
                 </div>
-                <div class="table-slot__seats"></div>
             `;
+            circle.appendChild(center);
 
-            const seats = slot.querySelector('.table-slot__seats');
+            // Chairs around the table
+            const CHAIR_RADIUS = 88;
+            for (let s = 0; s < SEATS_PER_TABLE; s++) {
+                const angle = (2 * Math.PI * s / SEATS_PER_TABLE) - Math.PI / 2;
+                const cx = 100 + CHAIR_RADIUS * Math.cos(angle) - 20;
+                const cy = 100 + CHAIR_RADIUS * Math.sin(angle) - 20;
 
-            if (seatedGuests.length === 0) {
-                seats.innerHTML = '<span class="table-slot__empty">Arrastra invitados aqui</span>';
-            } else {
-                seatedGuests.forEach(g => seats.appendChild(createChip(g, true)));
+                const chair = document.createElement('div');
+                chair.className = 'table-2d__chair';
+                chair.style.left = cx + 'px';
+                chair.style.top = cy + 'px';
+                chair.dataset.seatIdx = s;
+
+                const guest = seatedGuests[s];
+                if (guest) {
+                    chair.classList.add('table-2d__chair--occupied');
+                    if (isConfirmed(guest)) chair.classList.add('guest-chip--confirmed');
+                    chair.textContent = getInitials(guest);
+                    chair.dataset.guestId = guest.id;
+
+                    // Tooltip
+                    const tip = document.createElement('span');
+                    tip.className = 'table-2d__chair-tooltip';
+                    tip.textContent = `${guest.nombre} ${guest.apellidos}`;
+                    chair.appendChild(tip);
+
+                    // Remove button
+                    const rm = document.createElement('span');
+                    rm.className = 'table-2d__chair-remove';
+                    rm.textContent = '\u00d7';
+                    rm.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        await removeAssignment(guest.id);
+                        render();
+                    });
+                    chair.appendChild(rm);
+                }
+
+                // Drop guest onto chair
+                chair.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    chair.classList.add('drag-over-chair');
+                });
+                chair.addEventListener('dragleave', () => chair.classList.remove('drag-over-chair'));
+                chair.addEventListener('drop', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    chair.classList.remove('drag-over-chair');
+                    const guestId = e.dataTransfer.getData('text/plain');
+                    if (!guestId) return;
+                    if (seatedGuests.length >= SEATS_PER_TABLE && !assignments[guestId]) return;
+                    await saveAssignment(guestId, table.id);
+                    render();
+                });
+
+                circle.appendChild(chair);
             }
 
-            slot.addEventListener('dragover', (e) => { e.preventDefault(); slot.classList.add('drag-over'); });
-            slot.addEventListener('dragleave', (e) => { if (!slot.contains(e.relatedTarget)) slot.classList.remove('drag-over'); });
-            slot.addEventListener('drop', async (e) => {
+            el.appendChild(circle);
+
+            // Drop on whole table (fallback)
+            el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag-over-table'); });
+            el.addEventListener('dragleave', (e) => { if (!el.contains(e.relatedTarget)) el.classList.remove('drag-over-table'); });
+            el.addEventListener('drop', async (e) => {
                 e.preventDefault();
-                slot.classList.remove('drag-over');
+                el.classList.remove('drag-over-table');
                 const guestId = e.dataTransfer.getData('text/plain');
                 if (!guestId) return;
-                if (seatedGuests.length >= SEATS_PER_TABLE && assignments[guestId] !== table.id) {
-                    slot.style.animation = 'shake 0.3s';
-                    setTimeout(() => slot.style.animation = '', 300);
-                    return;
-                }
+                if (seatedGuests.length >= SEATS_PER_TABLE && assignments[guestId] !== table.id) return;
                 await saveAssignment(guestId, table.id);
                 render();
             });
 
-            // Rename
-            const nameEl = slot.querySelector('.table-slot__name');
-            function startRename() {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = table.nombre;
-                input.className = 'table-slot__name-input';
-                nameEl.replaceWith(input);
-                input.focus();
-                input.select();
+            // Drag table to reposition
+            let isDragging = false, dragOff = { x: 0, y: 0 };
+            center.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+                isDragging = true;
+                center.classList.add('dragging-table');
+                const rect = el.getBoundingClientRect();
+                const canvasRect = tablesArea.getBoundingClientRect();
+                dragOff.x = e.clientX - rect.left - canvasRect.left + tablesArea.scrollLeft;
+                dragOff.y = e.clientY - rect.top - canvasRect.top + tablesArea.scrollTop;
+                e.preventDefault();
+            });
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const canvasRect = tablesArea.getBoundingClientRect();
+                const nx = e.clientX - canvasRect.left + tablesArea.scrollLeft - dragOff.x + (TABLE_W / 2 - 50);
+                const ny = e.clientY - canvasRect.top + tablesArea.scrollTop - dragOff.y + (TABLE_H / 2 - 50);
+                el.style.left = Math.max(0, nx) + 'px';
+                el.style.top = Math.max(0, ny) + 'px';
+            });
+            document.addEventListener('mouseup', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                center.classList.remove('dragging-table');
+                positions[table.id] = { x: parseInt(el.style.left), y: parseInt(el.style.top) };
+                localStorage.setItem('boda_table_positions', JSON.stringify(positions));
+            });
 
-                async function finishRename() {
-                    const newName = input.value.trim() || table.nombre;
-                    table.nombre = newName;
-                    await saveMesa(table);
+            // Rename
+            center.querySelector('.table-2d__btn--rename').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newName = prompt('Nombre de la mesa:', table.nombre);
+                if (newName && newName.trim()) {
+                    table.nombre = newName.trim();
+                    saveMesa(table);
                     render();
                 }
-
-                input.addEventListener('blur', finishRename);
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') input.blur();
-                    if (e.key === 'Escape') { input.value = table.nombre; input.blur(); }
-                });
-            }
-
-            slot.querySelector('.table-slot__rename').addEventListener('click', startRename);
-            nameEl.addEventListener('dblclick', startRename);
+            });
 
             // Delete
-            slot.querySelector('.table-slot__delete').addEventListener('click', async () => {
-                // Remove assignments for guests at this table
+            center.querySelector('.table-2d__btn--delete').addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!confirm(`Eliminar ${table.nombre}?`)) return;
                 const deletes = seatedGuests.map(g => removeAssignment(g.id));
                 await Promise.all(deletes);
                 await api.del('tables', `id=eq.${table.id}`);
                 tables = tables.filter(t => t.id !== table.id);
+                delete positions[table.id];
+                localStorage.setItem('boda_table_positions', JSON.stringify(positions));
                 render();
             });
 
-            tablesArea.appendChild(slot);
+            tablesArea.appendChild(el);
         });
 
         if (window.updateBudgetBar) window.updateBudgetBar();
@@ -390,6 +521,22 @@
             width: 140px;
         }
         @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+        .pool-group { margin-bottom: 12px; }
+        .pool-group__label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #888;
+            padding: 4px 0 4px 10px;
+            border-left: 3px solid #C9A96E;
+            margin-bottom: 6px;
+        }
+        .pool-group__chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
     `;
     document.head.appendChild(style);
 })();

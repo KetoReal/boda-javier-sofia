@@ -128,77 +128,188 @@
 
         .guest-chip:hover .guest-chip__tooltip { opacity: 1; }
 
-        /* Tables area */
-        .tables-area {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 24px;
-        }
-
-        .table-slot {
-            background: white;
+        /* Tables 2D canvas */
+        .tables-canvas-wrapper {
+            background: #faf8f4;
+            border: 2px solid #ece8e0;
             border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            text-align: center;
-            transition: box-shadow 0.3s;
-            min-height: 200px;
+            overflow: auto;
+            min-height: 500px;
+            position: relative;
         }
 
-        .table-slot.drag-over {
-            box-shadow: 0 0 0 3px #C9A96E, 0 8px 30px rgba(201,169,110,0.2);
+        .tables-canvas {
+            position: relative;
+            min-width: 100%;
+            min-height: 600px;
+            width: max-content;
         }
 
-        .table-slot__header {
+        /* Round table */
+        .table-2d {
+            position: absolute;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            margin-bottom: 16px;
+            cursor: default;
         }
 
-        .table-slot__name {
+        .table-2d__circle {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        /* Center (the table itself) */
+        .table-2d__center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f5f0e8, #ece4d6);
+            border: 3px solid #C9A96E;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: move;
+            z-index: 2;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: box-shadow 0.2s;
+        }
+
+        .table-2d__center:hover {
+            box-shadow: 0 6px 20px rgba(201,169,110,0.3);
+        }
+
+        .table-2d__center.dragging-table {
+            box-shadow: 0 8px 30px rgba(201,169,110,0.4);
+            opacity: 0.85;
+        }
+
+        .table-2d__name {
             font-family: 'Playfair Display', serif;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 0.8rem;
+            color: #5a4a2a;
+            text-align: center;
+            line-height: 1.2;
+            cursor: move;
         }
 
-        .table-slot__count {
-            font-size: 0.75rem;
+        .table-2d__count {
+            font-size: 0.6rem;
             color: #999;
+            margin-top: 2px;
         }
 
-        .table-slot__delete {
+        .table-2d__actions {
+            display: flex;
+            gap: 2px;
+            margin-top: 4px;
+        }
+
+        .table-2d__btn {
             background: none;
             border: none;
             cursor: pointer;
-            color: #ccc;
-            padding: 4px;
+            color: #bbb;
+            padding: 2px;
+            font-size: 0.6rem;
             transition: color 0.2s;
         }
 
-        .table-slot__delete:hover { color: #e74c3c; }
+        .table-2d__btn:hover { color: #C9A96E; }
+        .table-2d__btn--delete:hover { color: #e74c3c; }
 
-        .table-slot__seats {
+        /* Chair (seat around the table) */
+        .table-2d__chair {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f0ece6;
+            border: 2px dashed #ddd;
             display: flex;
-            flex-wrap: wrap;
+            align-items: center;
             justify-content: center;
-            gap: 8px;
-            min-height: 56px;
-            padding: 8px;
-            border: 2px dashed #eee;
-            border-radius: 12px;
-            transition: border-color 0.3s;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #bbb;
+            z-index: 1;
+            transition: all 0.2s;
         }
 
-        .table-slot.drag-over .table-slot__seats {
+        .table-2d__chair--occupied {
+            background: linear-gradient(135deg, #C9A96E, #E8D5B0);
+            border: 2px solid #C9A96E;
+            color: white;
+            cursor: pointer;
+        }
+
+        .table-2d__chair--occupied.guest-chip--confirmed {
+            background: linear-gradient(135deg, #2e7d32, #66bb6a);
+            border-color: #2e7d32;
+        }
+
+        .table-2d__chair:not(.table-2d__chair--occupied) {
+            cursor: default;
+        }
+
+        .table-2d__chair.drag-over-chair {
             border-color: #C9A96E;
-            background: #C9A96E08;
+            background: #C9A96E33;
+            transform: scale(1.15);
         }
 
-        .table-slot__empty {
-            color: #ccc;
-            font-size: 0.8rem;
-            padding: 16px;
+        .table-2d__chair-tooltip {
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2C2C2C;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 400;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+
+        .table-2d__chair:hover .table-2d__chair-tooltip { opacity: 1; }
+
+        .table-2d__chair-remove {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #e74c3c;
+            color: white;
+            border: 1.5px solid white;
+            font-size: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 3;
+        }
+
+        .table-2d__chair:hover .table-2d__chair-remove { opacity: 1; }
+
+        /* Table drag-over highlight */
+        .table-2d.drag-over-table .table-2d__center {
+            box-shadow: 0 0 0 3px #C9A96E, 0 8px 30px rgba(201,169,110,0.3);
         }
 
         /* Remove button on seated chip */
@@ -310,8 +421,10 @@
             <div class="guest-pool__list" id="pool-list"></div>
         </div>
 
-        <!-- Tables grid -->
-        <div class="tables-area" id="tables-area"></div>
+        <!-- Tables 2D canvas -->
+        <div class="tables-canvas-wrapper">
+            <div class="tables-canvas" id="tables-area"></div>
+        </div>
     </main>
 
     <!-- Generate modal -->

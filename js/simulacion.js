@@ -110,6 +110,7 @@
             group_id: vg.group_id || null,
             familia: vg.familia || null,
             is_child: vg.is_child || false,
+            exclude_from_budget: vg.exclude_from_budget || false,
         };
         await api.upsert('virtual_guests', row);
     }
@@ -320,11 +321,13 @@
         ungroupedSection.style.display = '';
         setupDropZone(ungroupedSection, null);
 
-        // Select all ungrouped
+        // Select all ungrouped (replace listener to avoid duplicates on re-render)
         const ungroupedCheckAll = document.getElementById('ungrouped-check-all');
         if (ungroupedCheckAll) {
             ungroupedCheckAll.checked = false;
-            ungroupedCheckAll.addEventListener('change', (e) => {
+            const newCheckAll = ungroupedCheckAll.cloneNode(true);
+            ungroupedCheckAll.replaceWith(newCheckAll);
+            newCheckAll.addEventListener('change', (e) => {
                 ungrouped.forEach(v => {
                     if (e.target.checked) selected.add(String(v.id));
                     else selected.delete(String(v.id));
@@ -652,6 +655,7 @@
         document.getElementById('ef-familia').value = vg.familia || '';
         document.getElementById('ef-is-child').value = vg.is_child ? '1' : '0';
         document.getElementById('ef-confirmed').checked = !!vg.matched_guest_id;
+        document.getElementById('ef-exclude-budget').checked = !!vg.exclude_from_budget;
         document.getElementById('edit-delete').style.display = 'inline-flex';
         populateGroupSelect(document.getElementById('ef-grupo'), vg.group_id || '');
         populateFamiliaDatalist();
@@ -691,6 +695,9 @@
 
         // Familia
         vg.familia = document.getElementById('ef-familia').value.trim() || null;
+
+        // Budget exclusion
+        vg.exclude_from_budget = document.getElementById('ef-exclude-budget').checked;
 
         await saveVirtualGuest(vg);
         render();
@@ -871,6 +878,24 @@
         await Promise.all(deletes);
         selected.clear();
         render();
+    });
+
+    document.getElementById('sel-link-familia').addEventListener('click', async () => {
+        if (selected.size < 2) { alert('Selecciona al menos 2 personas para vincular como familia.'); return; }
+        const firstName = (() => {
+            const firstId = [...selected][0];
+            const vg = virtualGuests.find(v => v.id === firstId);
+            return vg ? `${vg.nombre} ${vg.apellidos}` : '';
+        })();
+        const familiaName = prompt('Nombre de la familia:', `Familia de ${firstName}`);
+        if (!familiaName) return;
+        const updates = [...selected].map(id => {
+            const vg = virtualGuests.find(v => v.id === id);
+            if (vg) vg.familia = familiaName;
+            return api.patch('virtual_guests', `id=eq.${encodeURIComponent(id)}`, { familia: familiaName });
+        });
+        await Promise.all(updates);
+        clearSelection(); render();
     });
 
     document.getElementById('sel-move').addEventListener('click', () => {
