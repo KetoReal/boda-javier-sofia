@@ -107,9 +107,18 @@
                         </select>
                     </div>
                 </div>
-                <div class="modal__field">
-                    <label class="modal__label">Alergias / Notas</label>
-                    <input type="text" class="modal__input" id="f-alergias" placeholder="Opcional">
+                <div class="modal__row">
+                    <div class="modal__field">
+                        <label class="modal__label">Tipo de invitado</label>
+                        <select class="modal__input" id="f-is-child">
+                            <option value="0">Adulto</option>
+                            <option value="1">Nino/a</option>
+                        </select>
+                    </div>
+                    <div class="modal__field">
+                        <label class="modal__label">Alergias / Notas</label>
+                        <input type="text" class="modal__input" id="f-alergias" placeholder="Opcional">
+                    </div>
                 </div>
                 <div class="modal__btns">
                     <button type="button" class="btn-action btn-action--outline" id="modal-cancel">Cancelar</button>

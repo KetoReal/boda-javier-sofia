@@ -247,6 +247,7 @@
         document.getElementById('f-autobus').value = guest.autobus || '';
         document.getElementById('f-menu').value = guest.menu || '';
         document.getElementById('f-alergias').value = guest.alergias || '';
+        document.getElementById('f-is-child').value = guest.is_child ? '1' : '0';
         document.getElementById('modal-delete').style.display = 'inline-flex';
         document.getElementById('guest-modal').classList.add('active');
         document.getElementById('f-nombre').focus();
@@ -265,6 +266,7 @@
             autobus: document.getElementById('f-autobus').value || null,
             menu: document.getElementById('f-menu').value || null,
             alergias: document.getElementById('f-alergias').value.trim() || null,
+            is_child: document.getElementById('f-is-child').value === '1',
         };
         if (!data.nombre || !data.apellidos) return;
 

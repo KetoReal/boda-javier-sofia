@@ -443,9 +443,10 @@
             toggleSelect(vg.id);
         });
 
-        // Click row → match modal
+        // Click row → match modal (only if not clicking a button/action)
         row.addEventListener('click', (e) => {
             if (e.target.type === 'checkbox') return;
+            if (e.target.closest('.vguest__actions') || e.target.closest('.vguest__btn') || e.target.closest('button')) return;
             openMatchModal(vg);
         });
 
