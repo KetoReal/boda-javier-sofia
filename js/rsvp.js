@@ -231,30 +231,49 @@
             const radioName = 'menu_' + i;
             const block = document.createElement('div');
             block.className = 'rsvp__menu-person';
-            block.innerHTML = `
-                <div class="rsvp__menu-person-name">
-                    <div class="rsvp__member-icon">${i + 1}</div>
-                    ${esc(m.nombre)} ${esc(m.apellidos)}${m.isChild ? ' <span style="font-size:0.75rem;color:var(--olive);font-weight:400">(niño/a)</span>' : ''}
-                </div>
-                <div class="rsvp__options rsvp__options--menu">
-                    ${['carne', 'pescado', 'vegetariano', 'vegano'].map(opt => `
-                        <label class="rsvp__option-circle">
-                            <input type="radio" name="${radioName}" value="${opt}" class="rsvp__option-input menu-radio" data-idx="${i}">
-                            <div class="rsvp__circle-visual">
-                                <div class="rsvp__circle-icon">${MENU_SVG[opt]}</div>
-                                <span class="rsvp__circle-label">${opt.charAt(0).toUpperCase() + opt.slice(1)}</span>
-                            </div>
-                            <div class="rsvp__option-check">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-                            </div>
-                        </label>
-                    `).join('')}
-                </div>
-                <div class="rsvp__form-group rsvp__form-group--allergy">
-                    <label class="rsvp__label">¿Alguna alergia o intolerancia?</label>
-                    <textarea class="rsvp__input rsvp__textarea allergy-input" data-idx="${i}" placeholder="Déjalo en blanco si no tiene" rows="2"></textarea>
-                </div>
-            `;
+
+            if (m.isChild) {
+                // Children: fixed kids menu, only allergy field
+                m.menu = 'infantil';
+                block.innerHTML = `
+                    <div class="rsvp__menu-person-name">
+                        <div class="rsvp__member-icon" style="background:var(--olive)">${i + 1}</div>
+                        ${esc(m.nombre)} ${esc(m.apellidos)} <span style="font-size:0.75rem;color:var(--olive);font-weight:400">(niño/a)</span>
+                    </div>
+                    <p style="font-size:0.9rem;color:var(--carbon-light);margin-bottom:10px;text-align:center;">Menu infantil incluido</p>
+                    <div class="rsvp__form-group rsvp__form-group--allergy">
+                        <label class="rsvp__label">¿Alguna alergia o intolerancia?</label>
+                        <textarea class="rsvp__input rsvp__textarea allergy-input" data-idx="${i}" placeholder="Dejalo en blanco si no tiene" rows="2"></textarea>
+                    </div>
+                `;
+            } else {
+                // Adults: choose menu
+                block.innerHTML = `
+                    <div class="rsvp__menu-person-name">
+                        <div class="rsvp__member-icon">${i + 1}</div>
+                        ${esc(m.nombre)} ${esc(m.apellidos)}
+                    </div>
+                    <div class="rsvp__options rsvp__options--menu">
+                        ${['carne', 'pescado', 'vegetariano', 'vegano'].map(opt => `
+                            <label class="rsvp__option-circle">
+                                <input type="radio" name="${radioName}" value="${opt}" class="rsvp__option-input menu-radio" data-idx="${i}">
+                                <div class="rsvp__circle-visual">
+                                    <div class="rsvp__circle-icon">${MENU_SVG[opt]}</div>
+                                    <span class="rsvp__circle-label">${opt.charAt(0).toUpperCase() + opt.slice(1)}</span>
+                                </div>
+                                <div class="rsvp__option-check">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div class="rsvp__form-group rsvp__form-group--allergy">
+                        <label class="rsvp__label">¿Alguna alergia o intolerancia?</label>
+                        <textarea class="rsvp__input rsvp__textarea allergy-input" data-idx="${i}" placeholder="Dejalo en blanco si no tiene" rows="2"></textarea>
+                    </div>
+                `;
+            }
+
             container.appendChild(block);
         });
 
@@ -265,7 +284,9 @@
     }
 
     function checkAllMenusSelected() {
-        const allSelected = members.every((_, i) => {
+        // Only adults need to select menu; children already have 'infantil'
+        const allSelected = members.every((m, i) => {
+            if (m.isChild) return true;
             return document.querySelector(`input[name="menu_${i}"]:checked`);
         });
         document.getElementById('rsvp-next-4').disabled = !allSelected;
