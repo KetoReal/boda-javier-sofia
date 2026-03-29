@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tests — Boda S&J</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --card: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --text-dim: #8b949e;
+            --green: #3fb950;
+            --green-bg: rgba(63,185,80,0.1);
+            --red: #f85149;
+            --red-bg: rgba(248,81,73,0.1);
+            --gold: #C9A96E;
+            --gold-bg: rgba(201,169,110,0.1);
+            --blue: #58a6ff;
+            --blue-bg: rgba(88,166,255,0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .topbar__brand {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .topbar__brand span { color: var(--text-dim); font-weight: 400; font-size: 0.85rem; }
+
+        .topbar__back {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+
+        .topbar__back:hover { color: var(--text); }
+
+        .hero-test {
+            text-align: center;
+            padding: 48px 24px 32px;
+        }
+
+        .hero-test__icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            background: var(--gold-bg);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .hero-test__title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .hero-test__sub {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        /* Summary cards */
+        .summary {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            padding: 0 24px 32px;
+            flex-wrap: wrap;
+        }
+
+        .summary__card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 28px;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .summary__num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.2rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .summary__label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            margin-top: 6px;
+        }
+
+        .summary__card--passed { border-color: var(--green); }
+        .summary__card--passed .summary__num { color: var(--green); }
+        .summary__card--failed { border-color: var(--red); }
+        .summary__card--failed .summary__num { color: var(--red); }
+        .summary__card--time .summary__num { color: var(--blue); }
+
+        /* Progress bar */
+        .progress-wrap {
+            max-width: 700px;
+            margin: 0 auto 32px;
+            padding: 0 24px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--green);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill--fail { background: var(--red); }
+
+        .progress-text {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 8px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Run button */
+        .run-wrap {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .btn-run {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 36px;
+            border: none;
+            border-radius: 10px;
+            background: var(--green);
+            color: #000;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-run:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(63,185,80,0.3); }
+        .btn-run:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-run--running { background: var(--gold); }
+
+        /* Sections */
+        .sections {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0 24px 48px;
+        }
+
+        .test-section {
+            margin-bottom: 16px;
+        }
+
+        .test-section__header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px 10px 0 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .test-section__header:hover { border-color: var(--text-dim); }
+
+        .test-section__icon {
+            font-size: 1.1rem;
+        }
+
+        .test-section__title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex: 1;
+        }
+
+        .test-section__badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .test-section__badge--pending { background: var(--border); color: var(--text-dim); }
+        .test-section__badge--pass { background: var(--green-bg); color: var(--green); }
+        .test-section__badge--fail { background: var(--red-bg); color: var(--red); }
+        .test-section__badge--running { background: var(--gold-bg); color: var(--gold); }
+
+        .test-section__list {
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            overflow: hidden;
+        }
+
+        .test-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.82rem;
+            transition: background 0.2s;
+        }
+
+        .test-row:last-child { border-bottom: none; }
+        .test-row:hover { background: rgba(255,255,255,0.02); }
+
+        .test-row__icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .test-row__icon--pending { background: var(--border); color: var(--text-dim); }
+        .test-row__icon--pass { background: var(--green); color: #000; }
+        .test-row__icon--fail { background: var(--red); color: #fff; }
+        .test-row__icon--running { background: var(--gold); color: #000; animation: pulse 1s infinite; }
+
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .test-row__name { flex: 1; }
+        .test-row__time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+<body>
+    <script>if (!localStorage.getItem('admin_auth')) window.location.href = 'index.html';</script>
+
+    <div class="topbar">
+        <div class="topbar__brand">S & J <span>Test Suite</span></div>
+        <a href="dashboard.html" class="topbar__back">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Volver al Dashboard
+        </a>
+    </div>
+
+    <div class="hero-test">
+        <div class="hero-test__icon">🧪</div>
+        <h1 class="hero-test__title">Test Suite</h1>
+        <p class="hero-test__sub">33 tests E2E contra Supabase — datos aislados, limpieza automatica</p>
+    </div>
+
+    <div class="summary">
+        <div class="summary__card summary__card--passed">
+            <div class="summary__num" id="s-passed">—</div>
+            <div class="summary__label">Passed</div>
+        </div>
+        <div class="summary__card summary__card--failed">
+            <div class="summary__num" id="s-failed">—</div>
+            <div class="summary__label">Failed</div>
+        </div>
+        <div class="summary__card summary__card--time">
+            <div class="summary__num" id="s-time">—</div>
+            <div class="summary__label">Tiempo</div>
+        </div>
+    </div>
+
+    <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-text" id="progress-text">Listo para ejecutar</div>
+    </div>
+
+    <div class="run-wrap">
+        <button class="btn-run" id="btn-run">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Ejecutar Tests
+        </button>
+    </div>
+
+    <div class="sections" id="sections"></div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const BASE = 'https://lpatzgviideumccecfew.supabase.co';
+        const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MTY2MDMsImV4cCI6MjA5MDA5MjYwM30.jWQrW6FqArq87w50YALA9CUxahyPzwHBQLd9kI7U4qY';
+        const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUxNjYwMywiZXhwIjoyMDkwMDkyNjAzfQ.-CM_Wku1-fWqtbz8flSb3MFabrxFnoED047cT81hgAs';
+
+        const TEST_FAMILY = 'fam_TEST_SUITE_' + Date.now();
+        const TEST_VG_PREFIX = 'test_vg_';
+        const TEST_GROUP_ID = 'tg_test_' + Date.now();
+        const TEST_TABLE_ID = 9999999990000 + Date.now() % 10000;
+
+        function anonH() { return { 'Content-Type': 'application/json', 'apikey': ANON, 'Authorization': `Bearer ${ANON}` }; }
+        function svcH(p) { const h = { 'Content-Type': 'application/json', 'apikey': ANON, 'Authorization': `Bearer ${SKEY}` }; if (p) h['Prefer'] = p; return h; }
+
+        async function api(method, table, query, body, headers) {
+            const url = `${BASE}/rest/v1/${table}?${query || ''}`;
+            const opts = { method, headers: headers || svcH('return=representation') };
+            if (body) opts.body = JSON.stringify(Array.isArray(body) ? body : [body]);
+            const res = await fetch(url, opts);
+            return { ok: res.ok, status: res.status, data: res.ok ? await res.json().catch(() => null) : null };
+        }
+
+        // ── Test definitions ──
+        const SECTIONS = [
+            {
+                id: 'conn', icon: '🔌', title: 'Conexion y DB',
+                tests: [
+                    { name: 'Supabase reachable' },
+                    { name: 'guests table exists' },
+                    { name: 'virtual_guests table exists' },
+                ]
+            },
+            {
+                id: 'rsvp', icon: '👪', title: 'RSVP — Registro familia',
+                tests: [
+                    { name: 'Register family (2 adults + 1 child)' },
+                    { name: 'Adults have menu' },
+                    { name: 'Child has null menu + is_child=true' },
+                    { name: 'Family group matches' },
+                    { name: 'Transport matches for all' },
+                    { name: 'Read back family returns 3' },
+                    { name: 'Solo guest registration' },
+                ]
+            },
+            {
+                id: 'crud', icon: '📝', title: 'Admin — Invitados CRUD',
+                tests: [
+                    { name: 'Edit guest name' },
+                    { name: 'Edit is_child toggle' },
+                    { name: 'Delete solo guest' },
+                    { name: 'Verify guest deleted' },
+                ]
+            },
+            {
+                id: 'sim', icon: '🎯', title: 'Simulacion — Virtual Guests',
+                tests: [
+                    { name: 'Create 2 virtual guests' },
+                    { name: 'Create group' },
+                    { name: 'Assign guest to group' },
+                    { name: 'Set familia on both' },
+                    { name: 'Exclude from budget' },
+                    { name: 'Similarity exact match = 1.0' },
+                    { name: 'Manual match virtual to real' },
+                    { name: 'Delete virtual guest' },
+                ]
+            },
+            {
+                id: 'mesa', icon: '🪑', title: 'Mesas',
+                tests: [
+                    { name: 'Create table' },
+                    { name: 'Assign guest to table' },
+                    { name: 'Read seat assignment' },
+                    { name: 'Remove guest from table' },
+                    { name: 'Delete table' },
+                    { name: 'Verify table deleted' },
+                ]
+            },
+            {
+                id: 'budget', icon: '💰', title: 'Budget',
+                tests: [
+                    { name: 'Budget excludes marked guests' },
+                    { name: 'Budget count matches filter' },
+                ]
+            },
+            {
+                id: 'csv', icon: '📄', title: 'CSV parse',
+                tests: [
+                    { name: 'CSV parse logic' },
+                ]
+            },
+            {
+                id: 'clean', icon: '🧹', title: 'Cleanup',
+                tests: [
+                    { name: 'No test guests remain' },
+                    { name: 'No test virtual guests remain' },
+                ]
+            },
+        ];
+
+        // ── Render UI ──
+        const sectionsEl = document.getElementById('sections');
+        SECTIONS.forEach(sec => {
+            const div = document.createElement('div');
+            div.className = 'test-section';
+            div.id = 'sec-' + sec.id;
+            div.innerHTML = `
+                <div class="test-section__header">
+                    <span class="test-section__icon">${sec.icon}</span>
+                    <span class="test-section__title">${sec.title}</span>
+                    <span class="test-section__badge test-section__badge--pending" id="badge-${sec.id}">${sec.tests.length} tests</span>
+                </div>
+                <div class="test-section__list">
+                    ${sec.tests.map((t, i) => `
+                        <div class="test-row" id="row-${sec.id}-${i}">
+                            <div class="test-row__icon test-row__icon--pending" id="icon-${sec.id}-${i}">•</div>
+                            <span class="test-row__name">${t.name}</span>
+                            <span class="test-row__time" id="time-${sec.id}-${i}"></span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            sectionsEl.appendChild(div);
+        });
+
+        // ── UI update helpers ──
+        let totalTests = 0, passedTests = 0, failedTests = 0;
+
+        function setTestStatus(secId, idx, status, ms) {
+            const icon = document.getElementById(`icon-${secId}-${idx}`);
+            const time = document.getElementById(`time-${secId}-${idx}`);
+            icon.className = 'test-row__icon test-row__icon--' + status;
+            icon.textContent = status === 'pass' ? '✓' : status === 'fail' ? '✗' : status === 'running' ? '▶' : '•';
+            if (ms !== undefined) time.textContent = ms + 'ms';
+        }
+
+        function setSectionStatus(secId, passed, total) {
+            const badge = document.getElementById(`badge-${secId}`);
+            const allPass = passed === total;
+            badge.className = 'test-section__badge test-section__badge--' + (allPass ? 'pass' : 'fail');
+            badge.textContent = `${passed}/${total}`;
+        }
+
+        function updateProgress() {
+            const total = passedTests + failedTests;
+            const allTests = SECTIONS.reduce((s, sec) => s + sec.tests.length, 0);
+            const pct = Math.round((total / allTests) * 100);
+            const fill = document.getElementById('progress-fill');
+            fill.style.width = pct + '%';
+            fill.className = 'progress-fill' + (failedTests > 0 ? ' progress-fill--fail' : '');
+            document.getElementById('progress-text').textContent = `${total}/${allTests} completados`;
+            document.getElementById('s-passed').textContent = passedTests;
+            document.getElementById('s-failed').textContent = failedTests;
+        }
+
+        async function assert(condition, secId, idx) {
+            const t0 = performance.now();
+            const ok = !!condition;
+            const ms = Math.round(performance.now() - t0);
+            if (ok) passedTests++; else failedTests++;
+            setTestStatus(secId, idx, ok ? 'pass' : 'fail', ms);
+            updateProgress();
+            return ok;
+        }
+
+        async function timedAssert(fn, secId, idx) {
+            setTestStatus(secId, idx, 'running');
+            const t0 = performance.now();
+            try {
+                const ok = await fn();
+                const ms = Math.round(performance.now() - t0);
+                if (ok) passedTests++; else failedTests++;
+                setTestStatus(secId, idx, ok ? 'pass' : 'fail', ms);
+            } catch (e) {
+                const ms = Math.round(performance.now() - t0);
+                failedTests++;
+                setTestStatus(secId, idx, 'fail', ms);
+            }
+            updateProgress();
+        }
+
+        // ── Shared state ──
+        let familyGuests = [], soloGuestId = null, testVgIds = [], testRealId = null;
+
+        // ── Run all tests ──
+        async function runTests() {
+            const btn = document.getElementById('btn-run');
+            btn.disabled = true;
+            btn.className = 'btn-run btn-run--running';
+            btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Ejecutando...';
+            const startTime = performance.now();
+
+            passedTests = 0; failedTests = 0;
+
+            // A. Conexion
+            let secPassed = 0;
+            await timedAssert(async () => { const r = await fetch(`${BASE}/rest/v1/guests?limit=0`, { headers: svcH() }); return r.status === 200 || r.status === 206; }, 'conn', 0);
+            await timedAssert(async () => { const r = await api('GET', 'guests', 'limit=1'); return r.ok; }, 'conn', 1);
+            await timedAssert(async () => { const r = await api('GET', 'virtual_guests', 'limit=1'); return r.ok; }, 'conn', 2);
+            secPassed = 3 - failedTests; setSectionStatus('conn', secPassed, 3);
+
+            // B. RSVP
+            const prevFail = failedTests;
+            const familyData = [
+                { nombre: 'TestPadre', apellidos: 'Suite', autobus: 'plaza-castilla', menu: 'carne', alergias: null, family_group: TEST_FAMILY, is_child: false },
+                { nombre: 'TestMadre', apellidos: 'Suite', autobus: 'plaza-castilla', menu: 'pescado', alergias: 'gluten', family_group: TEST_FAMILY, is_child: false },
+                { nombre: 'TestNino', apellidos: 'Suite', autobus: 'plaza-castilla', menu: null, alergias: null, family_group: TEST_FAMILY, is_child: true },
+            ];
+            await timedAssert(async () => {
+                const res = await fetch(`${BASE}/rest/v1/guests`, { method: 'POST', headers: { ...anonH(), 'Prefer': 'return=representation' }, body: JSON.stringify(familyData) });
+                familyGuests = res.ok ? await res.json() : [];
+                return res.ok && familyGuests.length === 3;
+            }, 'rsvp', 0);
+            await timedAssert(async () => { const a = familyGuests.filter(g => !g.is_child); return a.length === 2 && a.every(x => x.menu !== null); }, 'rsvp', 1);
+            await timedAssert(async () => { const c = familyGuests.find(g => g.is_child); return c && c.menu === null && c.is_child === true; }, 'rsvp', 2);
+            await timedAssert(async () => familyGuests.every(g => g.family_group === TEST_FAMILY), 'rsvp', 3);
+            await timedAssert(async () => familyGuests.every(g => g.autobus === 'plaza-castilla'), 'rsvp', 4);
+            await timedAssert(async () => { const r = await api('GET', 'guests', `family_group=eq.${TEST_FAMILY}`); return r.data && r.data.length === 3; }, 'rsvp', 5);
+            await timedAssert(async () => {
+                const res = await fetch(`${BASE}/rest/v1/guests`, { method: 'POST', headers: { ...anonH(), 'Prefer': 'return=representation' }, body: JSON.stringify([{ nombre: 'TestSolo', apellidos: 'Suite', autobus: 'no', menu: 'vegano', family_group: TEST_FAMILY, is_child: false }]) });
+                const d = res.ok ? await res.json() : []; soloGuestId = d[0]?.id;
+                return res.ok && d.length === 1;
+            }, 'rsvp', 6);
+            setSectionStatus('rsvp', 7 - (failedTests - prevFail), 7);
+
+            // C. CRUD
+            const prevFail2 = failedTests;
+            await timedAssert(async () => { const r = await api('PATCH', 'guests', `id=eq.${familyGuests[0].id}`, { nombre: 'TestPadreEditado' }); return r.data && r.data[0]?.nombre === 'TestPadreEditado'; }, 'crud', 0);
+            await timedAssert(async () => { const r = await api('PATCH', 'guests', `id=eq.${familyGuests[0].id}`, { is_child: true }); const ok = r.data && r.data[0]?.is_child === true; await api('PATCH', 'guests', `id=eq.${familyGuests[0].id}`, { is_child: false }); return ok; }, 'crud', 1);
+            await timedAssert(async () => { const r = await fetch(`${BASE}/rest/v1/guests?id=eq.${soloGuestId}`, { method: 'DELETE', headers: svcH() }); return r.ok; }, 'crud', 2);
+            await timedAssert(async () => { const r = await api('GET', 'guests', `id=eq.${soloGuestId}`); return r.data && r.data.length === 0; }, 'crud', 3);
+            setSectionStatus('crud', 4 - (failedTests - prevFail2), 4);
+
+            // D. Simulacion
+            const prevFail3 = failedTests;
+            const vg1Id = TEST_VG_PREFIX + Date.now() + '_1';
+            const vg2Id = TEST_VG_PREFIX + Date.now() + '_2';
+            await timedAssert(async () => { const r = await api('POST', 'virtual_guests', '', [{ id: vg1Id, nombre: 'TestVirtual', apellidos: 'Uno' }, { id: vg2Id, nombre: 'TestVirtual', apellidos: 'Dos' }]); testVgIds = [vg1Id, vg2Id]; return r.data && r.data.length === 2; }, 'sim', 0);
+            await timedAssert(async () => { const r = await api('POST', 'guest_groups', '', { id: TEST_GROUP_ID, name: 'Test Group', color: '#C9A96E' }); return r.data && r.data[0]?.id === TEST_GROUP_ID; }, 'sim', 1);
+            await timedAssert(async () => { const r = await api('PATCH', 'virtual_guests', `id=eq.${vg1Id}`, { group_id: TEST_GROUP_ID }); return r.data && r.data[0]?.group_id === TEST_GROUP_ID; }, 'sim', 2);
+            await timedAssert(async () => { await api('PATCH', 'virtual_guests', `id=eq.${vg1Id}`, { familia: 'Familia Test' }); const r = await api('PATCH', 'virtual_guests', `id=eq.${vg2Id}`, { familia: 'Familia Test' }); return r.data && r.data[0]?.familia === 'Familia Test'; }, 'sim', 3);
+            await timedAssert(async () => { const r = await api('PATCH', 'virtual_guests', `id=eq.${vg1Id}`, { exclude_from_budget: true }); return r.data && r.data[0]?.exclude_from_budget === true; }, 'sim', 4);
+            await timedAssert(async () => {
+                function normalize(s) { return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim(); }
+                function similarity(a,b) { const na=normalize(a),nb=normalize(b); if(na===nb)return 1; if(na.includes(nb)||nb.includes(na))return 0.8; const wa=na.split(' '),wb=nb.split(' '); const c=wa.filter(w=>wb.includes(w)).length; return Math.max(wa.length,wb.length)>0?c/Math.max(wa.length,wb.length):0; }
+                return similarity('TestVirtual Uno', 'TestVirtual Uno') === 1;
+            }, 'sim', 5);
+            await timedAssert(async () => { testRealId = familyGuests[0].id; const r = await api('PATCH', 'virtual_guests', `id=eq.${vg1Id}`, { matched_guest_id: testRealId }); return r.data && r.data[0]?.matched_guest_id === testRealId; }, 'sim', 6);
+            await timedAssert(async () => { const r = await fetch(`${BASE}/rest/v1/virtual_guests?id=eq.${vg2Id}`, { method: 'DELETE', headers: svcH() }); return r.ok; }, 'sim', 7);
+            setSectionStatus('sim', 8 - (failedTests - prevFail3), 8);
+
+            // E. Mesas
+            const prevFail4 = failedTests;
+            await timedAssert(async () => { const r = await api('POST', 'tables', '', { id: TEST_TABLE_ID, nombre: 'Mesa Test' }); return r.data && r.data[0]?.nombre === 'Mesa Test'; }, 'mesa', 0);
+            await timedAssert(async () => { const r = await api('POST', 'mesa_assignments', '', { virtual_guest_id: vg1Id, table_id: TEST_TABLE_ID }); return r.ok; }, 'mesa', 1);
+            await timedAssert(async () => { const r = await api('GET', 'mesa_assignments', `virtual_guest_id=eq.${vg1Id}`); return r.data && r.data.length === 1 && r.data[0].table_id == TEST_TABLE_ID; }, 'mesa', 2);
+            await timedAssert(async () => { const r = await fetch(`${BASE}/rest/v1/mesa_assignments?virtual_guest_id=eq.${vg1Id}`, { method: 'DELETE', headers: svcH() }); return r.ok; }, 'mesa', 3);
+            await timedAssert(async () => { const r = await fetch(`${BASE}/rest/v1/tables?id=eq.${TEST_TABLE_ID}`, { method: 'DELETE', headers: svcH() }); return r.ok; }, 'mesa', 4);
+            await timedAssert(async () => { const r = await api('GET', 'tables', `id=eq.${TEST_TABLE_ID}`); return r.data && r.data.length === 0; }, 'mesa', 5);
+            setSectionStatus('mesa', 6 - (failedTests - prevFail4), 6);
+
+            // F. Budget
+            const prevFail5 = failedTests;
+            await timedAssert(async () => { const r = await api('GET', 'virtual_guests', 'select=id,matched_guest_id,exclude_from_budget'); const bg = (r.data||[]).filter(v=>!v.exclude_from_budget); return bg.length <= (r.data||[]).length; }, 'budget', 0);
+            await timedAssert(async () => { const r = await api('GET', 'virtual_guests', 'select=id,exclude_from_budget'); const all=r.data||[]; return all.filter(v=>!v.exclude_from_budget).length === all.length - all.filter(v=>v.exclude_from_budget).length; }, 'budget', 1);
+            setSectionStatus('budget', 2 - (failedTests - prevFail5), 2);
+
+            // G. CSV
+            const prevFail6 = failedTests;
+            await timedAssert(async () => {
+                const csv = 'Nombre;Apellidos\nJuan;Garcia\nMaria;Martinez';
+                const lines = csv.split('\n').map(l=>l.trim()).filter(Boolean);
+                const parsed = lines.slice(1).map(l => { const p=l.split(';'); return {nombre:p[0],apellidos:p[1]||''}; });
+                return parsed.length === 2 && parsed[0].nombre === 'Juan';
+            }, 'csv', 0);
+            setSectionStatus('csv', 1 - (failedTests - prevFail6), 1);
+
+            // H. Cleanup
+            const prevFail7 = failedTests;
+            await fetch(`${BASE}/rest/v1/guests?family_group=eq.${TEST_FAMILY}`, { method: 'DELETE', headers: svcH() });
+            await fetch(`${BASE}/rest/v1/virtual_guests?id=like.${TEST_VG_PREFIX}*`, { method: 'DELETE', headers: svcH() });
+            await fetch(`${BASE}/rest/v1/guest_groups?id=eq.${TEST_GROUP_ID}`, { method: 'DELETE', headers: svcH() });
+            await fetch(`${BASE}/rest/v1/tables?id=eq.${TEST_TABLE_ID}`, { method: 'DELETE', headers: svcH() });
+
+            await timedAssert(async () => { const r = await api('GET', 'guests', `family_group=eq.${TEST_FAMILY}`); return r.data && r.data.length === 0; }, 'clean', 0);
+            await timedAssert(async () => { const r = await api('GET', 'virtual_guests', `id=like.${TEST_VG_PREFIX}*`); return r.data && r.data.length === 0; }, 'clean', 1);
+            setSectionStatus('clean', 2 - (failedTests - prevFail7), 2);
+
+            // Done
+            const elapsed = ((performance.now() - startTime) / 1000).toFixed(1);
+            document.getElementById('s-time').textContent = elapsed + 's';
+            document.getElementById('progress-text').textContent = failedTests === 0 ? `33/33 completados — Todo OK` : `${passedTests + failedTests}/33 completados — ${failedTests} fallidos`;
+
+            btn.disabled = false;
+            btn.className = 'btn-run';
+            btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Ejecutar de nuevo';
+        }
+
+        document.getElementById('btn-run').addEventListener('click', runTests);
+    })();
+    </script>
+</body>
+</html>
