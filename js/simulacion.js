@@ -99,18 +99,19 @@
 
     // ── Save helpers ──
     async function saveVirtualGuest(vg) {
-        const data = {
-            nombre: vg.nombre,
-            apellidos: vg.apellidos || '',
-            menu: vg.menu || null,
-            autobus: vg.autobus || null,
-            alergias: vg.alergias || null,
-            matched_guest_id: vg.matched_guest_id || null,
-            group_id: vg.group_id || null,
-            familia: vg.familia || null,
-            is_child: !!vg.is_child,
-            exclude_from_budget: !!vg.exclude_from_budget,
-        };
+        const data = {};
+        if (vg.nombre !== undefined) data.nombre = vg.nombre;
+        if (vg.apellidos !== undefined) data.apellidos = vg.apellidos;
+        data.menu = vg.menu || null;
+        data.autobus = vg.autobus || null;
+        data.alergias = vg.alergias || null;
+        data.matched_guest_id = vg.matched_guest_id ? Number(vg.matched_guest_id) : null;
+        data.group_id = vg.group_id || null;
+        data.familia = vg.familia || null;
+        data.is_child = vg.is_child === true;
+        data.exclude_from_budget = vg.exclude_from_budget === true;
+
+        console.log('saveVirtualGuest PATCH:', vg.id, JSON.stringify(data));
         const res = await fetch(`${SUPABASE_URL}/rest/v1/virtual_guests?id=eq.${encodeURIComponent(vg.id)}`, {
             method: 'PATCH',
             headers: authHeaders('return=representation'),
@@ -119,6 +120,8 @@
         if (!res.ok) {
             const err = await res.text();
             console.error('saveVirtualGuest FAILED:', res.status, err);
+        } else {
+            console.log('saveVirtualGuest OK');
         }
     }
 
