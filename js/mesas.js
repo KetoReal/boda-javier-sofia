@@ -355,17 +355,14 @@
                 if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
                 isDragging = true;
                 center.classList.add('dragging-table');
-                const rect = el.getBoundingClientRect();
-                const canvasRect = tablesArea.getBoundingClientRect();
-                dragOff.x = e.clientX - rect.left - canvasRect.left + tablesArea.scrollLeft;
-                dragOff.y = e.clientY - rect.top - canvasRect.top + tablesArea.scrollTop;
+                dragOff.x = e.clientX - el.offsetLeft;
+                dragOff.y = e.clientY - el.offsetTop;
                 e.preventDefault();
             });
             document.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
-                const canvasRect = tablesArea.getBoundingClientRect();
-                const nx = e.clientX - canvasRect.left + tablesArea.scrollLeft - dragOff.x + (TABLE_W / 2 - 50);
-                const ny = e.clientY - canvasRect.top + tablesArea.scrollTop - dragOff.y + (TABLE_H / 2 - 50);
+                const nx = e.clientX - dragOff.x;
+                const ny = e.clientY - dragOff.y;
                 el.style.left = Math.max(0, nx) + 'px';
                 el.style.top = Math.max(0, ny) + 'px';
             });
