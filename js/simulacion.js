@@ -627,26 +627,35 @@
         });
     }
 
+    let _familiaListeners = false;
     function populateFamiliaDatalist() {
-        const dl = document.getElementById('vfamilias-list');
-        const chips = document.getElementById('familia-chips');
-        if (!dl) return;
-        const unique = [...new Set(virtualGuests.map(v => v.familia).filter(Boolean))];
-        dl.innerHTML = unique.map(f => `<option value="${esc(f)}">`).join('');
+        const input = document.getElementById('ef-familia');
+        const dropdown = document.getElementById('familia-autocomplete');
+        if (!input || !dropdown) return;
+        const unique = [...new Set(virtualGuests.map(v => v.familia).filter(Boolean))].sort();
 
-        // Render clickable chips for quick assignment
-        if (chips) {
-            chips.innerHTML = unique.map(f =>
-                `<button type="button" class="familia-chip" data-fam="${esc(f)}">${esc(f)}</button>`
+        function showSuggestions(filter) {
+            const q = filter.toLowerCase();
+            const matches = q ? unique.filter(f => f.toLowerCase().includes(q)) : unique;
+            if (!matches.length) { dropdown.classList.remove('active'); return; }
+            dropdown.innerHTML = matches.map(f =>
+                `<div class="familia-option" data-fam="${esc(f)}">${esc(f)}</div>`
             ).join('');
-            chips.querySelectorAll('.familia-chip').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const input = document.getElementById('ef-familia');
-                    input.value = btn.dataset.fam;
-                    chips.querySelectorAll('.familia-chip').forEach(b => b.classList.remove('familia-chip--active'));
-                    btn.classList.add('familia-chip--active');
+            dropdown.classList.add('active');
+            dropdown.querySelectorAll('.familia-option').forEach(opt => {
+                opt.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    input.value = opt.dataset.fam;
+                    dropdown.classList.remove('active');
                 });
             });
+        }
+
+        if (!_familiaListeners) {
+            input.addEventListener('focus', () => showSuggestions(input.value));
+            input.addEventListener('input', () => showSuggestions(input.value));
+            input.addEventListener('blur', () => setTimeout(() => dropdown.classList.remove('active'), 150));
+            _familiaListeners = true;
         }
     }
 
@@ -665,12 +674,6 @@
         document.getElementById('edit-delete').style.display = 'inline-flex';
         populateGroupSelect(document.getElementById('ef-grupo'), vg.group_id || '');
         populateFamiliaDatalist();
-
-        // Highlight current familia chip
-        const currentFam = vg.familia || '';
-        document.querySelectorAll('.familia-chip').forEach(btn => {
-            btn.classList.toggle('familia-chip--active', btn.dataset.fam === currentFam);
-        });
 
         document.getElementById('edit-modal').classList.add('active');
         document.getElementById('ef-nombre').focus();

@@ -514,36 +514,39 @@
     border-left-color: #C9A96E !important;
 }
 
-/* ── Familia chips in edit modal ── */
-.familia-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
-}
-
-.familia-chip {
-    padding: 4px 12px;
-    border-radius: 16px;
+/* ── Familia autocomplete dropdown ── */
+.familia-autocomplete {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: #fff;
     border: 1.5px solid #e0dcd5;
-    background: #faf9f7;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 160px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.familia-autocomplete.active {
+    display: block;
+}
+
+.familia-option {
+    padding: 8px 12px;
     font-family: 'Montserrat', sans-serif;
-    font-size: 0.72rem;
-    font-weight: 500;
-    color: #666;
+    font-size: 0.78rem;
+    color: #555;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.15s;
 }
 
-.familia-chip:hover {
-    border-color: #C9A96E;
+.familia-option:hover {
+    background: #f5f0e8;
     color: #C9A96E;
-}
-
-.familia-chip--active {
-    background: #C9A96E;
-    color: white;
-    border-color: #C9A96E;
 }
 
 /* ── Group check-all ── */

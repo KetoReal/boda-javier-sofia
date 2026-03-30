@@ -177,11 +177,10 @@
                         <label class="modal__label">Grupo</label>
                         <select class="modal__input" id="ef-grupo"></select>
                     </div>
-                    <div class="modal__field">
+                    <div class="modal__field" style="position:relative">
                         <label class="modal__label">Familia <small style="color:#bbb;font-weight:400">(escribe o elige)</small></label>
-                        <input type="text" class="modal__input" id="ef-familia" list="vfamilias-list" placeholder="Ej: Familia Martinez">
-                        <datalist id="vfamilias-list"></datalist>
-                        <div class="familia-chips" id="familia-chips"></div>
+                        <input type="text" class="modal__input" id="ef-familia" autocomplete="off" placeholder="Ej: Familia Martinez">
+                        <div class="familia-autocomplete" id="familia-autocomplete"></div>
                     </div>
                 </div>
                 <div class="modal__row">
