@@ -404,6 +404,14 @@
     margin-bottom: 4px;
 }
 
+.inv-familia .vguest--matched {
+    background: #f0faf0;
+}
+
+.inv-familia .vguest--matched:hover {
+    background: #e4f5e4;
+}
+
 .inv-guest__fam-tag {
     background: #C9A96E18;
     color: #A8884C;
