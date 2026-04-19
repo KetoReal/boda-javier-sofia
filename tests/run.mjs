@@ -287,8 +287,64 @@ async function run() {
     });
     assert(parsed.length === 2 && parsed[0].nombre === 'Juan' && parsed[1].apellidos === 'Martinez', 'CSV parse logic');
 
-    // ── H. Cleanup ──
-    section('H. Cleanup');
+    // ── H. Email aportación (migration 003) ──
+    section('H. Email aportación + info_enviada_at');
+
+    const testEmailFamily = TEST_FAMILY + '_email';
+    const emailGuest = {
+        nombre: 'TestEmail',
+        apellidos: 'Aportacion',
+        family_group: testEmailFamily,
+        is_child: false,
+        menu: 'carne',
+        autobus: 'no',
+        email: 'test-aportacion@example.com',
+    };
+    const insEmail = await post('guests', emailGuest, svcHeaders('return=representation'));
+    assert(insEmail.status === 201 && insEmail.data && insEmail.data[0].email === 'test-aportacion@example.com', 'Insert guest con email persiste');
+    const emailGuestId = insEmail.data?.[0]?.id;
+    assert(insEmail.data?.[0]?.info_enviada_at === null, 'info_enviada_at nace null');
+
+    // Marcar como enviado
+    if (emailGuestId) {
+        const now = new Date().toISOString();
+        const updEnv = await patch('guests', `id=eq.${emailGuestId}`, { info_enviada_at: now });
+        assert(updEnv.status === 200 && updEnv.data?.[0]?.info_enviada_at !== null, 'Marcar info_enviada_at funciona');
+    }
+
+    // Query: pendientes (email IS NOT NULL AND info_enviada_at IS NULL)
+    // Insertamos otro pendiente para que la query tenga al menos 1 resultado
+    const pendingGuest = {
+        nombre: 'TestPending',
+        apellidos: 'Sin Enviar',
+        family_group: testEmailFamily,
+        is_child: false,
+        menu: 'pescado',
+        autobus: 'no',
+        email: 'pending@example.com',
+    };
+    await post('guests', pendingGuest, svcHeaders('return=representation'));
+    const pendings = await get('guests', 'email=not.is.null&info_enviada_at=is.null&family_group=eq.' + testEmailFamily + '&select=id,email');
+    assert(pendings.status === 200 && pendings.data && pendings.data.length === 1, 'Query pendientes filtra correctamente');
+
+    // Email opcional: guest sin email debe aceptarse
+    const noEmailGuest = {
+        nombre: 'TestNoEmail',
+        apellidos: 'Sin Email',
+        family_group: testEmailFamily,
+        is_child: false,
+        menu: 'vegetariano',
+        autobus: 'no',
+        email: null,
+    };
+    const insNoEmail = await post('guests', noEmailGuest, svcHeaders('return=representation'));
+    assert(insNoEmail.status === 201 && insNoEmail.data?.[0]?.email === null, 'Guest sin email (opcional) se guarda');
+
+    // Cleanup family email
+    await del('guests', `family_group=eq.${testEmailFamily}`);
+
+    // ── I. Cleanup ──
+    section('I. Cleanup');
 
     // Delete test family guests
     await del('guests', `family_group=eq.${TEST_FAMILY}`);

@@ -1,0 +1,4 @@
+project_id = "lpatzgviideumccecfew"
+
+[functions.notify-rsvp]
+verify_jwt = false

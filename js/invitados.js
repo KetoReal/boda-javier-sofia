@@ -47,6 +47,53 @@
         ]);
     }
 
+    async function markInfoEnviada(guestId) {
+        await api.patch('guests', `id=eq.${guestId}`, { info_enviada_at: new Date().toISOString() });
+    }
+
+    function renderPending() {
+        const box = document.getElementById('inv-pending');
+        const list = document.getElementById('pending-list');
+        const countEl = document.getElementById('pending-count');
+        if (!box || !list) return;
+
+        const pending = guests.filter(g => g.email && !g.info_enviada_at);
+        countEl.textContent = pending.length;
+
+        if (pending.length === 0) {
+            box.style.display = 'none';
+            list.innerHTML = '';
+            return;
+        }
+
+        box.style.display = '';
+        list.innerHTML = pending.map(g => {
+            const body = 'Hola ' + g.nombre + ',\n\nGracias por querer tener un detalle con nosotros. Los datos para la transferencia son:\n\nIBAN: ES13 0182 7066 2002 0065 3919\nConcepto: Boda Sofia y Javier\n\nCon todo el carino,\nSofia y Javier';
+            const mailto = `mailto:${encodeURIComponent(g.email)}?subject=${encodeURIComponent('Boda Sofia & Javier - Datos transferencia')}&body=${encodeURIComponent(body)}`;
+            return `
+                <div class="inv-pending__item" data-id="${g.id}">
+                    <div class="inv-pending__info">
+                        <strong>${esc(g.nombre)} ${esc(g.apellidos)}</strong>
+                        <a href="${mailto}">${esc(g.email)}</a>
+                    </div>
+                    <button class="btn-action btn-action--outline pending-mark-sent" data-id="${g.id}" title="Marcar como enviado">
+                        Marcar enviado
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        list.querySelectorAll('.pending-mark-sent').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.dataset.id;
+                btn.disabled = true;
+                btn.textContent = 'Guardando...';
+                await markInfoEnviada(id);
+                await fetchAll(); render();
+            });
+        });
+    }
+
     async function upsertGuest(guest) {
         const isEdit = !!guest.id;
         const method = isEdit ? 'PATCH' : 'POST';
@@ -111,6 +158,8 @@
         el('stat-adults', adultsCount);
         el('stat-children', childrenCount);
         el('stat-families', familyGroups.size);
+
+        renderPending();
 
         const list = document.getElementById('guests-list');
         const empty = document.getElementById('inv-empty');
@@ -190,6 +239,14 @@
         if (guest.autobus && guest.autobus !== 'no') badges += `<span class="inv-guest__badge inv-guest__badge--bus">${busLabel}</span>`;
         else if (guest.autobus === 'no') badges += `<span class="inv-guest__badge inv-guest__badge--car">Propio</span>`;
         if (guest.alergias) badges += `<span class="inv-guest__badge inv-guest__badge--allergy">${esc(guest.alergias)}</span>`;
+        if (guest.email) {
+            if (guest.info_enviada_at) {
+                const sentDate = new Date(guest.info_enviada_at).toLocaleDateString('es-ES');
+                badges += `<span class="inv-guest__badge inv-guest__badge--sent" title="IBAN enviado ${sentDate}">✓ IBAN enviado</span>`;
+            } else {
+                badges += `<span class="inv-guest__badge inv-guest__badge--pending" title="${esc(guest.email)} — pide info de aportación">✉ Pide IBAN</span>`;
+            }
+        }
 
         const row = document.createElement('div');
         row.className = 'inv-guest' + (guest.family_group ? ' inv-guest--in-family' : '');
@@ -248,6 +305,24 @@
         document.getElementById('f-menu').value = guest.menu || '';
         document.getElementById('f-alergias').value = guest.alergias || '';
         document.getElementById('f-is-child').value = guest.is_child ? '1' : '0';
+        document.getElementById('f-email').value = guest.email || '';
+
+        const enviadaEl = document.getElementById('f-enviada-status');
+        const marcarBtn = document.getElementById('f-marcar-enviado');
+        if (guest.info_enviada_at) {
+            enviadaEl.textContent = 'Enviado ' + new Date(guest.info_enviada_at).toLocaleString('es-ES');
+            enviadaEl.className = 'modal__hint modal__hint--enviada modal__hint--enviada-yes';
+            marcarBtn.style.display = 'none';
+        } else if (guest.email) {
+            enviadaEl.textContent = 'Pendiente';
+            enviadaEl.className = 'modal__hint modal__hint--enviada modal__hint--enviada-pending';
+            marcarBtn.style.display = 'inline-flex';
+        } else {
+            enviadaEl.textContent = '—';
+            enviadaEl.className = 'modal__hint modal__hint--enviada';
+            marcarBtn.style.display = 'none';
+        }
+
         document.getElementById('modal-delete').style.display = 'inline-flex';
         document.getElementById('guest-modal').classList.add('active');
         document.getElementById('f-nombre').focus();
@@ -260,6 +335,11 @@
     document.getElementById('guest-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('guest-id').value;
+        const emailVal = document.getElementById('f-email').value.trim();
+        if (emailVal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+            alert('Email no válido');
+            return;
+        }
         const data = {
             nombre: document.getElementById('f-nombre').value.trim(),
             apellidos: document.getElementById('f-apellidos').value.trim(),
@@ -267,6 +347,7 @@
             menu: document.getElementById('f-menu').value || null,
             alergias: document.getElementById('f-alergias').value.trim() || null,
             is_child: document.getElementById('f-is-child').value === '1',
+            email: emailVal || null,
         };
         if (!data.nombre || !data.apellidos) return;
 
@@ -299,6 +380,19 @@
     });
 
     document.getElementById('modal-cancel').addEventListener('click', closeGuestModal);
+
+    document.getElementById('f-marcar-enviado').addEventListener('click', async () => {
+        const id = document.getElementById('guest-id').value;
+        if (!id) return;
+        const btn = document.getElementById('f-marcar-enviado');
+        btn.disabled = true;
+        btn.textContent = 'Guardando...';
+        await markInfoEnviada(id);
+        await fetchAll(); render();
+        btn.disabled = false;
+        btn.textContent = 'Marcar enviado';
+        closeGuestModal();
+    });
 
     // ── Link Modal (link real → virtual) ──
     let currentRealGuest = null;
