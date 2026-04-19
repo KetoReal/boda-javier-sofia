@@ -69,12 +69,13 @@
         box.style.display = '';
         list.innerHTML = pending.map(g => {
             const body = 'Hola ' + g.nombre + ',\n\nGracias por querer tener un detalle con nosotros. Los datos para la transferencia son:\n\nIBAN: ES13 0182 7066 2002 0065 3919\nConcepto: Boda Sofia y Javier\n\nCon todo el carino,\nSofia y Javier';
-            const mailto = `mailto:${encodeURIComponent(g.email)}?subject=${encodeURIComponent('Boda Sofia & Javier - Datos transferencia')}&body=${encodeURIComponent(body)}`;
+            const subject = 'Boda Sofia & Javier - Datos transferencia';
+            const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(g.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             return `
                 <div class="inv-pending__item" data-id="${g.id}">
                     <div class="inv-pending__info">
                         <strong>${esc(g.nombre)} ${esc(g.apellidos)}</strong>
-                        <a href="${mailto}">${esc(g.email)}</a>
+                        <a href="${gmailUrl}" target="_blank" rel="noopener">${esc(g.email)}</a>
                     </div>
                     <button class="btn-action btn-action--outline pending-mark-sent" data-id="${g.id}" title="Marcar como enviado">
                         Marcar enviado
