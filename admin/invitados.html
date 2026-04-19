@@ -62,6 +62,16 @@
 
         <p class="inv-hint" id="inv-hint">Los invitados aparecen aqui cuando se registran via el formulario RSVP. Usa <a href="simulacion.html">Simulacion</a> para gestionar grupos y planificacion.</p>
 
+        <!-- Pendientes de enviar info de aportación -->
+        <div class="inv-pending" id="inv-pending" style="display:none">
+            <div class="inv-pending__header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <h3>Pendientes de enviar IBAN (<span id="pending-count">0</span>)</h3>
+            </div>
+            <p class="inv-pending__hint">Estos invitados han dejado su email porque quieren hacer una aportación. Mándales el IBAN manualmente y marca como enviado.</p>
+            <div id="pending-list"></div>
+        </div>
+
         <!-- Guest list -->
         <div id="guests-list"></div>
 
@@ -119,6 +129,19 @@
                     <div class="modal__field">
                         <label class="modal__label">Alergias / Notas</label>
                         <input type="text" class="modal__input" id="f-alergias" placeholder="Opcional">
+                    </div>
+                </div>
+                <div class="modal__row">
+                    <div class="modal__field">
+                        <label class="modal__label">Email aportacion</label>
+                        <input type="email" class="modal__input" id="f-email" placeholder="Solo titular, opcional">
+                    </div>
+                    <div class="modal__field">
+                        <label class="modal__label">Info enviada</label>
+                        <div class="modal__row-inline">
+                            <span id="f-enviada-status" class="modal__hint modal__hint--enviada">No</span>
+                            <button type="button" class="btn-action btn-action--outline" id="f-marcar-enviado">Marcar enviado</button>
+                        </div>
                     </div>
                 </div>
                 <div class="modal__btns">

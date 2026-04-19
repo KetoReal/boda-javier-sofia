@@ -1,2 +1,8 @@
 # Local Netlify folder
 .netlify
+
+# DB snapshots (PII) — solo el script se versiona
+backups/boda-snapshot-*/
+
+# Old js/css backups
+*.bak.*

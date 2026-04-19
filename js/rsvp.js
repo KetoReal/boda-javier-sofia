@@ -10,7 +10,6 @@
     const SUPABASE_URL = 'https://lpatzgviideumccecfew.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxwYXR6Z3ZpaWRldW1jY2VjZmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1MTY2MDMsImV4cCI6MjA5MDA5MjYwM30.jWQrW6FqArq87w50YALA9CUxahyPzwHBQLd9kI7U4qY';
 
-    const IBAN = 'ES13 0182 7066 2002 0065 3919';
     const TOTAL_STEPS = 5;
 
     // ── State ──
@@ -295,30 +294,47 @@
         document.getElementById('rsvp-next-4').disabled = !allSelected;
     }
 
-    // Step 4 → Step 5 (save to Supabase)
-    document.getElementById('rsvp-next-4').addEventListener('click', async () => {
+    // Step 4 → Step 5 (sin INSERT: el guardado ocurre al finalizar en step 5
+    // para poder incluir el email opcional del titular en la misma operación)
+    document.getElementById('rsvp-next-4').addEventListener('click', () => {
         // Read menu + allergy data
         members.forEach((m, i) => {
             if (!m.isChild) {
                 const checked = document.querySelector(`input[name="menu_${i}"]:checked`);
                 m.menu = checked ? checked.value : null;
             }
-            // Children keep menu = 'infantil' set in buildStep4
             const allergyEl = document.querySelector(`.allergy-input[data-idx="${i}"]`);
             m.alergias = allergyEl ? allergyEl.value.trim() || null : null;
         });
 
-        // Check all adults have selected menu (children have '__infantil__' placeholder)
         if (members.some(m => !m.isChild && !m.menu)) return;
 
-        const btn = document.getElementById('rsvp-next-4');
+        goToStep(5);
+    });
+
+    // ── Step 5 → Finalizar (aquí sí hacemos el INSERT con el email opcional) ──
+    document.getElementById('rsvp-next-5').addEventListener('click', async () => {
+        const emailInput = document.getElementById('guest-email');
+        const email = emailInput.value.trim() || null;
+
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            emailInput.style.borderColor = '#e74c3c';
+            emailInput.addEventListener('input', function fix() {
+                emailInput.style.borderColor = '';
+                emailInput.removeEventListener('input', fix);
+            });
+            return;
+        }
+
+        const btn = document.getElementById('rsvp-next-5');
         btn.disabled = true;
+        const originalHtml = btn.innerHTML;
         btn.textContent = 'Guardando...';
 
         const transport = getSelectedRadio('transport');
 
-        // Build records (children menu stored as null, identified by is_child)
-        const records = members.map(m => ({
+        // Email solo en el titular (members[0] = quien registra la familia)
+        const records = members.map((m, i) => ({
             nombre: m.nombre,
             apellidos: m.apellidos,
             autobus: transport,
@@ -326,9 +342,9 @@
             alergias: m.alergias,
             family_group: familyGroup,
             is_child: m.isChild,
+            email: i === 0 ? email : null,
         }));
 
-        // Save to Supabase
         let saved = false;
         try {
             const res = await fetch(`${SUPABASE_URL}/rest/v1/guests`, {
@@ -347,7 +363,6 @@
         }
 
         if (!saved) {
-            // Fallback: localStorage
             const guests = JSON.parse(localStorage.getItem('wedding_guests') || '[]');
             records.forEach(r => {
                 r.id = Date.now() + Math.random();
@@ -357,40 +372,8 @@
             localStorage.setItem('wedding_guests', JSON.stringify(guests));
         }
 
-        btn.innerHTML = 'Siguiente <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+        btn.innerHTML = originalHtml;
         btn.disabled = false;
-        goToStep(5);
-    });
-
-    // ── Step 5: IBAN ──
-    document.getElementById('iban-copy').addEventListener('click', () => {
-        const ibanClean = IBAN.replace(/\s/g, '');
-        navigator.clipboard.writeText(ibanClean).then(() => {
-            const btn = document.getElementById('iban-copy');
-            const txt = document.getElementById('copy-text');
-            btn.classList.add('copied');
-            txt.textContent = 'Copiado';
-            setTimeout(() => {
-                btn.classList.remove('copied');
-                txt.textContent = 'Copiar';
-            }, 2000);
-        }).catch(() => {
-            const el = document.getElementById('iban-number');
-            const range = document.createRange();
-            range.selectNodeContents(el);
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-        });
-    });
-
-    document.getElementById('rsvp-share').addEventListener('click', () => {
-        const text = `Boda Sofía & Javier - 29 agosto 2026\n\nIBAN: ${IBAN}`;
-        const encoded = encodeURIComponent(text);
-        window.open(`https://wa.me/?text=${encoded}`, '_blank');
-    });
-
-    document.getElementById('rsvp-next-5').addEventListener('click', () => {
         showConfirmation();
     });
 
