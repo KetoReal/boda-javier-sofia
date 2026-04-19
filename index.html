@@ -378,18 +378,17 @@
                     </div>
                 </div>
 
-                <!-- Step 5: Detalle (email opcional para aportación) -->
+                <!-- Step 5: Email obligatorio — recibirá resumen de la reserva -->
                 <div class="rsvp__panel" id="rsvp-step-5">
                     <div class="rsvp__regalo">
                         <p class="rsvp__regalo-text">
-                            Lo más importante es que estéis con nosotros ese día.
-                            Si además os hace ilusión hacernos un regalo,
-                            dejadnos aquí vuestro email y os escribimos con los datos de cuenta.
+                            Déjanos tu email y te enviamos el resumen de la reserva
+                            para que tengas todos los datos guardados.
                         </p>
                         <div class="rsvp__form-group rsvp__form-group--regalo">
-                            <label class="rsvp__label" for="guest-email">Email (si queréis recibir los datos)</label>
-                            <input type="email" id="guest-email" class="rsvp__input" placeholder="tu@email.com" autocomplete="email">
-                            <p class="rsvp__regalo-hint">Os escribiremos solo con los datos de cuenta, nada más.</p>
+                            <label class="rsvp__label" for="guest-email">Tu email</label>
+                            <input type="email" id="guest-email" class="rsvp__input" placeholder="tu@email.com" autocomplete="email" required>
+                            <p class="rsvp__regalo-hint">Te llegará un email con los nombres, menús, autobús y demás. Solo ese, prometido.</p>
                         </div>
                     </div>
                     <div class="rsvp__nav rsvp__nav--regalo">

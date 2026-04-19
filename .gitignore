@@ -6,3 +6,7 @@ backups/boda-snapshot-*/
 
 # Old js/css backups
 *.bak.*
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/

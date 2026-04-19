@@ -312,13 +312,14 @@
         goToStep(5);
     });
 
-    // ── Step 5 → Finalizar (aquí sí hacemos el INSERT con el email opcional) ──
+    // ── Step 5 → Finalizar (INSERT con email obligatorio) ──
     document.getElementById('rsvp-next-5').addEventListener('click', async () => {
         const emailInput = document.getElementById('guest-email');
-        const email = emailInput.value.trim() || null;
+        const email = emailInput.value.trim();
 
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             emailInput.style.borderColor = '#e74c3c';
+            emailInput.focus();
             emailInput.addEventListener('input', function fix() {
                 emailInput.style.borderColor = '';
                 emailInput.removeEventListener('input', fix);

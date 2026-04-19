@@ -243,9 +243,9 @@
         if (guest.email) {
             if (guest.info_enviada_at) {
                 const sentDate = new Date(guest.info_enviada_at).toLocaleDateString('es-ES');
-                badges += `<span class="inv-guest__badge inv-guest__badge--sent" title="IBAN enviado ${sentDate}">✓ IBAN enviado</span>`;
+                badges += `<span class="inv-guest__badge inv-guest__badge--sent" title="Resumen enviado ${sentDate}">✓ Resumen enviado</span>`;
             } else {
-                badges += `<span class="inv-guest__badge inv-guest__badge--pending" title="${esc(guest.email)} — pide info de aportación">✉ Pide IBAN</span>`;
+                badges += `<span class="inv-guest__badge inv-guest__badge--pending" title="${esc(guest.email)} — resumen pendiente">⏳ Resumen pendiente</span>`;
             }
         }
 

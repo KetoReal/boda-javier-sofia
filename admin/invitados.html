@@ -62,13 +62,13 @@
 
         <p class="inv-hint" id="inv-hint">Los invitados aparecen aqui cuando se registran via el formulario RSVP. Usa <a href="simulacion.html">Simulacion</a> para gestionar grupos y planificacion.</p>
 
-        <!-- Pendientes de enviar info de aportación -->
+        <!-- Resumen pendiente de envío (red de seguridad por si falla Brevo) -->
         <div class="inv-pending" id="inv-pending" style="display:none">
             <div class="inv-pending__header">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                <h3>Pendientes de enviar IBAN (<span id="pending-count">0</span>)</h3>
+                <h3>Resumen pendiente de envío (<span id="pending-count">0</span>)</h3>
             </div>
-            <p class="inv-pending__hint">Estos invitados han dejado su email porque quieren hacer una aportación. Mándales el IBAN manualmente y marca como enviado.</p>
+            <p class="inv-pending__hint">El resumen se envía automáticamente al confirmar. Si aparece algo aquí es porque el envío automático falló. Puedes escribirle a mano desde Gmail o marcar como enviado si ya le has contactado por otra vía.</p>
             <div id="pending-list"></div>
         </div>
 
@@ -137,7 +137,7 @@
                         <input type="email" class="modal__input" id="f-email" placeholder="Solo titular, opcional">
                     </div>
                     <div class="modal__field">
-                        <label class="modal__label">Info enviada</label>
+                        <label class="modal__label">Resumen enviado</label>
                         <div class="modal__row-inline">
                             <span id="f-enviada-status" class="modal__hint modal__hint--enviada">No</span>
                             <button type="button" class="btn-action btn-action--outline" id="f-marcar-enviado">Marcar enviado</button>
