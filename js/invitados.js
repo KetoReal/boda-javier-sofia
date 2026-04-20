@@ -190,7 +190,12 @@
             }
         });
 
-        // Sort families by first member's created_at (newest first)
+        // Sort members within each family chronologically (oldest first = titular is [0])
+        Object.keys(families).forEach(k => {
+            families[k].sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+        });
+
+        // Sort families by titular's created_at (newest family first)
         const familyKeys = Object.keys(families).sort((a, b) => {
             const da = families[a][0].created_at || '';
             const db = families[b][0].created_at || '';
@@ -200,7 +205,7 @@
         // Render family groups
         familyKeys.forEach(fgKey => {
             const members = families[fgKey];
-            // First non-child member is the "titular"
+            // Titular = primer miembro no niño por orden de registro
             const titular = members.find(m => !m.is_child) || members[0];
             const familyLabel = `Familia de ${titular.nombre} ${titular.apellidos}`;
 
