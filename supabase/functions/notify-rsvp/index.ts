@@ -23,7 +23,7 @@ const SITE_URL = "https://sofi-javi.com";
 const IBAN = "ES13 0182 7066 2002 0065 3919";
 const EVENT_DATE = "29 de agosto de 2026";
 const EVENT_TIME = "17:15h";
-const EVENT_PLACE = "Antigua Fábrica de Harinas, Madrid";
+const EVENT_PLACE = "Iglesia de Nuestra Señora de la Varga, Uceda (Guadalajara)";
 
 interface GuestRecord {
   id: number;
@@ -214,7 +214,6 @@ function buildInviteeEmail(titular: GuestRecord, family: GuestRecord[]) {
     ? "1 persona"
     : `${total} personas (${adultos} adulto${adultos !== 1 ? "s" : ""}${ninos ? `, ${ninos} niño${ninos > 1 ? "s" : ""}` : ""})`;
 
-  const concepto = `${titular.nombre} ${titular.apellidos}`.trim();
   const diasRestantes = daysUntilWedding();
 
   const membersHtml = family.map((g) => {
@@ -336,11 +335,6 @@ function buildInviteeEmail(titular: GuestRecord, family: GuestRecord[]) {
         <div style="background:#ffffff;border-radius:12px;padding:18px 20px;border:1px dashed #c9a96e">
           <div style="font-size:11px;color:#8a7a5a;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:6px">IBAN</div>
           <div style="font-family:'Courier New',Consolas,monospace;font-size:17px;font-weight:600;color:#2c2c2c;letter-spacing:0.06em;word-break:break-all">${IBAN}</div>
-          <div style="font-size:11px;color:#8a7a5a;text-transform:uppercase;letter-spacing:0.2em;margin:16px 0 6px">Concepto <span style="color:#b76e00">(importante)</span></div>
-          <div style="font-family:'Courier New',Consolas,monospace;font-size:16px;font-weight:600;color:#2c2c2c">${escapeHtml(concepto)}</div>
-          <div style="font-size:12px;color:#8a6b00;margin-top:12px;font-style:italic;line-height:1.6;padding-top:10px;border-top:1px solid #f0e6cc">
-            ⚡ Por favor pon tu nombre completo en el concepto — es la única manera de saber de quién viene el ingreso.
-          </div>
         </div>
       </div>
     </div>
@@ -390,8 +384,6 @@ ${membersText}${alergiasText}
 
 💌 Por si te hace ilusión hacernos un regalo:
    IBAN: ${IBAN}
-   Concepto: ${concepto}
-   (Por favor pon tu nombre completo en el concepto — es la única manera de saber de quién viene el ingreso.)
 
 Guárdate este email para acordarte de todos los datos y no perderte este día tan especial.
 
