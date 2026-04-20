@@ -190,16 +190,21 @@
             }
         });
 
-        // Sort members within each family chronologically (oldest first = titular is [0])
+        // Sort members within each family by created_at ASC, tiebreaker id ASC
+        // (batch INSERTs comparten created_at al microsegundo — id desempata)
         Object.keys(families).forEach(k => {
-            families[k].sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+            families[k].sort((a, b) => {
+                const c = (a.created_at || '').localeCompare(b.created_at || '');
+                return c !== 0 ? c : (a.id - b.id);
+            });
         });
 
-        // Sort families by titular's created_at (newest family first)
+        // Sort families by titular's created_at DESC (familia más reciente arriba)
         const familyKeys = Object.keys(families).sort((a, b) => {
             const da = families[a][0].created_at || '';
             const db = families[b][0].created_at || '';
-            return db.localeCompare(da);
+            const c = db.localeCompare(da);
+            return c !== 0 ? c : (families[b][0].id - families[a][0].id);
         });
 
         // Render family groups

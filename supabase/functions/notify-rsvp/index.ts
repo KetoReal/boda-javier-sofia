@@ -54,7 +54,7 @@ function menuLabel(g: GuestRecord): string {
 }
 
 async function fetchFamily(familyGroup: string): Promise<GuestRecord[]> {
-  const url = `${SUPABASE_URL}/rest/v1/guests?family_group=eq.${encodeURIComponent(familyGroup)}&select=*&order=created_at.asc`;
+  const url = `${SUPABASE_URL}/rest/v1/guests?family_group=eq.${encodeURIComponent(familyGroup)}&select=*&order=created_at.asc,id.asc`;
   const res = await fetch(url, {
     headers: {
       apikey: SUPABASE_SERVICE_ROLE_KEY,
